@@ -1,0 +1,3659 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width,initial-scale=1.0"
+>
+
+<title>GOALHUB</title>
+
+<style>
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+
+    margin:0;
+
+    background:#080c12;
+
+    color:#fff;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+}
+
+header{
+
+    min-height:72px;
+
+    background:#10161f;
+
+    border-bottom:
+        1px solid #26303d;
+
+    display:flex;
+
+    align-items:center;
+
+    padding:
+        12px 28px;
+
+    position:sticky;
+
+    top:0;
+
+    z-index:100;
+
+    gap:35px;
+
+}
+
+.logo{
+
+    font-size:27px;
+
+    font-weight:900;
+
+    white-space:nowrap;
+
+}
+
+.logo span{
+
+    color:#00d084;
+
+}
+
+nav{
+
+    display:flex;
+
+    gap:7px;
+
+    flex-wrap:wrap;
+
+}
+
+nav button{
+
+    background:transparent;
+
+    color:#9ca8b7;
+
+    border:0;
+
+    padding:
+        11px 14px;
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+    font-weight:bold;
+
+}
+
+nav button:hover,
+nav button.active{
+
+    background:#17202b;
+
+    color:#00d084;
+
+}
+
+main{
+
+    max-width:1250px;
+
+    margin:auto;
+
+    padding:
+        28px 20px 60px;
+
+}
+
+.page{
+
+    display:none;
+
+}
+
+.page.active{
+
+    display:block;
+
+}
+
+.hero{
+
+    background:
+        linear-gradient(
+            135deg,
+            #121b25,
+            #0d131b
+        );
+
+    border:
+        1px solid #26303d;
+
+    border-radius:18px;
+
+    padding:35px;
+
+    margin-bottom:22px;
+
+}
+
+.hero h1{
+
+    font-size:40px;
+
+    margin:
+        0 0 8px;
+
+}
+
+.hero p{
+
+    color:#9ca8b7;
+
+    margin:0;
+
+}
+
+.grid{
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(3,1fr);
+
+    gap:16px;
+
+}
+
+.card{
+
+    background:#111821;
+
+    border:
+        1px solid #26303d;
+
+    border-radius:14px;
+
+    padding:20px;
+
+}
+
+.card h3{
+
+    margin-top:0;
+
+}
+
+.muted{
+
+    color:#8995a5;
+
+}
+
+input,
+select{
+
+    width:100%;
+
+    background:#0b1017;
+
+    color:#fff;
+
+    border:
+        1px solid #303b49;
+
+    border-radius:9px;
+
+    padding:13px;
+
+    outline:none;
+
+}
+
+input:focus,
+select:focus{
+
+    border-color:#00d084;
+
+}
+
+.searchbar{
+
+    display:flex;
+
+    gap:10px;
+
+    margin-bottom:20px;
+
+}
+
+.searchbar input{
+
+    flex:1;
+
+}
+
+.btn{
+
+    background:#00d084;
+
+    color:#06100b;
+
+    border:0;
+
+    border-radius:9px;
+
+    padding:
+        12px 20px;
+
+    font-weight:bold;
+
+    cursor:pointer;
+
+    white-space:nowrap;
+
+}
+
+.btn:hover{
+
+    opacity:.85;
+
+}
+
+.btn.secondary{
+
+    background:#26303d;
+
+    color:#fff;
+
+}
+
+.section-title{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:18px;
+
+}
+
+.section-title h2{
+
+    margin:0;
+
+}
+
+/* MATCH */
+
+.matches{
+
+    display:grid;
+
+    gap:12px;
+
+}
+
+.match{
+
+    background:#111821;
+
+    border:
+        1px solid #26303d;
+
+    border-radius:14px;
+
+    overflow:hidden;
+
+}
+
+.league{
+
+    background:#171f29;
+
+    padding:
+        10px 15px;
+
+    color:#b7c1ce;
+
+    font-size:13px;
+
+    font-weight:bold;
+
+}
+
+.matchbody{
+
+    padding:18px;
+
+    display:grid;
+
+    grid-template-columns:
+        1fr 150px 1fr;
+
+    align-items:center;
+
+    gap:15px;
+
+}
+
+.team{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+}
+
+.team.away{
+
+    justify-content:flex-end;
+
+    text-align:right;
+
+}
+
+.team img{
+
+    width:42px;
+
+    height:42px;
+
+    object-fit:contain;
+
+}
+
+.teamname{
+
+    font-weight:bold;
+
+}
+
+.score{
+
+    text-align:center;
+
+    font-size:27px;
+
+    font-weight:900;
+
+}
+
+.time{
+
+    display:block;
+
+    font-size:13px;
+
+    color:#00d084;
+
+    margin-top:5px;
+
+}
+
+.status{
+
+    display:inline-block;
+
+    font-size:11px;
+
+    margin-top:5px;
+
+    padding:
+        4px 8px;
+
+    border-radius:10px;
+
+    background:#0d2b20;
+
+    color:#00d084;
+
+}
+
+/* TABLE */
+
+.table-wrap{
+
+    overflow-x:auto;
+
+    background:#111821;
+
+    border:
+        1px solid #26303d;
+
+    border-radius:14px;
+
+}
+
+table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+}
+
+th,
+td{
+
+    padding:
+        13px 12px;
+
+    border-bottom:
+        1px solid #222c38;
+
+    text-align:left;
+
+}
+
+th{
+
+    color:#8995a5;
+
+    font-size:13px;
+
+}
+
+td{
+
+    font-size:14px;
+
+}
+
+.teamcell{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+}
+
+.teamcell img{
+
+    width:28px;
+
+    height:28px;
+
+    object-fit:contain;
+
+}
+
+/* PLAYER */
+
+.player-grid{
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(3,1fr);
+
+    gap:15px;
+
+}
+
+.player{
+
+    background:#111821;
+
+    border:
+        1px solid #26303d;
+
+    border-radius:14px;
+
+    padding:18px;
+
+    display:flex;
+
+    gap:15px;
+
+    align-items:center;
+
+}
+
+.player img{
+
+    width:65px;
+
+    height:65px;
+
+    object-fit:cover;
+
+    border-radius:50%;
+
+    background:#202936;
+
+}
+
+.player h3{
+
+    margin:
+        0 0 6px;
+
+}
+
+.player p{
+
+    margin:
+        3px 0;
+
+    color:#8995a5;
+
+    font-size:13px;
+
+}
+
+/* TRANSFER */
+
+.transfer{
+
+    background:#111821;
+
+    border:
+        1px solid #26303d;
+
+    border-radius:13px;
+
+    padding:17px;
+
+    margin-bottom:10px;
+
+}
+
+.transfer-top{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    gap:10px;
+
+}
+
+.transfer-player{
+
+    font-weight:bold;
+
+    font-size:16px;
+
+}
+
+.transfer-date{
+
+    color:#00d084;
+
+    font-size:12px;
+
+}
+
+.transfer-row{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    gap:10px;
+
+    margin-top:12px;
+
+    color:#b8c2cf;
+
+}
+
+.transfer-team{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+}
+
+.transfer-team img{
+
+    width:30px;
+
+    height:30px;
+
+    object-fit:contain;
+
+}
+
+.follow-team{
+
+    background:#111821;
+
+    border:
+        1px solid #26303d;
+
+    border-radius:13px;
+
+    padding:15px;
+
+    margin-bottom:10px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:15px;
+
+}
+
+.follow-left{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:15px;
+
+}
+
+.follow-left img{
+
+    width:55px;
+
+    height:55px;
+
+    object-fit:contain;
+
+}
+
+.empty{
+
+    text-align:center;
+
+    padding:45px 20px;
+
+    color:#8995a5;
+
+    background:#111821;
+
+    border:
+        1px solid #26303d;
+
+    border-radius:14px;
+
+}
+
+.loading{
+
+    text-align:center;
+
+    padding:30px;
+
+    color:#8995a5;
+
+}
+
+.error{
+
+    background:#2a1114;
+
+    color:#ff6978;
+
+    border:
+        1px solid #542028;
+
+    padding:15px;
+
+    border-radius:10px;
+
+    margin-bottom:15px;
+
+}
+
+.success{
+
+    background:#0d2b20;
+
+    color:#00d084;
+
+    border:
+        1px solid #145f46;
+
+    padding:15px;
+
+    border-radius:10px;
+
+    margin-bottom:15px;
+
+}
+
+.small{
+
+    font-size:12px;
+
+    color:#8995a5;
+
+}
+
+@media(max-width:1000px){
+
+    header{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+    }
+
+    .grid,
+    .player-grid{
+
+        grid-template-columns:1fr 1fr;
+
+    }
+
+}
+
+@media(max-width:700px){
+
+    header{
+
+        padding:15px;
+
+    }
+
+    nav{
+
+        width:100%;
+
+        overflow-x:auto;
+
+        flex-wrap:nowrap;
+
+    }
+
+    nav button{
+
+        white-space:nowrap;
+
+    }
+
+    main{
+
+        padding:
+            18px 12px;
+
+    }
+
+    .grid,
+    .player-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .searchbar{
+
+        flex-direction:column;
+
+    }
+
+    .matchbody{
+
+        grid-template-columns:
+            1fr 80px 1fr;
+
+        padding:13px;
+
+    }
+
+    .team img{
+
+        width:32px;
+
+        height:32px;
+
+    }
+
+    .teamname{
+
+        font-size:12px;
+
+    }
+
+    .score{
+
+        font-size:22px;
+
+    }
+
+    .hero h1{
+
+        font-size:30px;
+
+    }
+
+    .follow-team{
+
+        flex-direction:column;
+
+        align-items:stretch;
+
+    }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<div class="logo">
+
+⚽ <span>GOAL</span>HUB
+
+</div>
+
+<nav>
+
+<button
+    class="active"
+    onclick="showPage('home',this)"
+>
+Ana Sayfa
+</button>
+
+<button
+    onclick="showPage('live',this)"
+>
+🔴 Canlı
+</button>
+
+<button
+    onclick="showPage('fixtures',this)"
+>
+📅 Fikstür
+</button>
+
+<button
+    onclick="showPage('standings',this)"
+>
+🏆 Puan Durumu
+</button>
+
+<button
+    onclick="showPage('players',this)"
+>
+👤 Oyuncular
+</button>
+
+<button
+    onclick="showPage('transfers',this)"
+>
+🔄 Transferler
+</button>
+
+<button
+    onclick="showPage('follow',this)"
+>
+⭐ Takım Takip
+</button>
+
+</nav>
+
+</header>
+
+<main>
+
+<!-- HOME -->
+
+<section
+    id="home"
+    class="page active"
+>
+
+<div class="hero">
+
+<h1>GOALHUB</h1>
+
+<p>
+Gerçek zamanlı futbol skorları,
+fikstürler, puan durumları,
+oyuncular, transferler ve
+takım bildirimleri.
+</p>
+
+</div>
+
+<div class="grid">
+
+<div class="card">
+
+<h3>🔴 Canlı Maçlar</h3>
+
+<p class="muted">
+Şu anda oynanan gerçek maçları
+görüntüle.
+</p>
+
+<button
+    class="btn"
+    onclick="goPage('live')"
+>
+Canlı Maçlara Git
+</button>
+
+</div>
+
+<div class="card">
+
+<h3>📅 Fikstür</h3>
+
+<p class="muted">
+Tarihe ve lige göre maçları görüntüle.
+</p>
+
+<button
+    class="btn"
+    onclick="goPage('fixtures')"
+>
+Fikstürü Aç
+</button>
+
+</div>
+
+<div class="card">
+
+<h3>🏆 Puan Durumu</h3>
+
+<p class="muted">
+Süper Lig, Premier League,
+La Liga ve daha fazlası.
+</p>
+
+<button
+    class="btn"
+    onclick="goPage('standings')"
+>
+Puan Durumunu Aç
+</button>
+
+</div>
+
+<div class="card">
+
+<h3>👤 Oyuncu Ara</h3>
+
+<p class="muted">
+Messi gibi oyuncuları ara.
+</p>
+
+<button
+    class="btn"
+    onclick="goPage('players')"
+>
+Oyuncu Ara
+</button>
+
+</div>
+
+<div class="card">
+
+<h3>🔄 Transferler</h3>
+
+<p class="muted">
+Takımın en yeni transferlerini gör.
+</p>
+
+<button
+    class="btn"
+    onclick="goPage('transfers')"
+>
+Transferleri Aç
+</button>
+
+</div>
+
+<div class="card">
+
+<h3>⭐ Takım Takip</h3>
+
+<p class="muted">
+Takım gol attığında telefonuna
+ve bilgisayarına bildirim gelsin.
+</p>
+
+<button
+    class="btn"
+    onclick="goPage('follow')"
+>
+Takım Takip
+</button>
+
+</div>
+
+<div class="card">
+
+<h3>🟢 Sistem</h3>
+
+<p
+    id="homeStatus"
+    class="muted"
+>
+Kontrol ediliyor...
+</p>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!-- LIVE -->
+
+<section
+    id="live"
+    class="page"
+>
+
+<div class="section-title">
+
+<h2>🔴 Canlı Maçlar</h2>
+
+<button
+    class="btn"
+    onclick="loadLive()"
+>
+Yenile
+</button>
+
+</div>
+
+<div
+    id="liveContent"
+    class="loading"
+>
+Canlı maçlar yükleniyor...
+</div>
+
+</section>
+
+
+<!-- FIXTURES -->
+
+<section
+    id="fixtures"
+    class="page"
+>
+
+<div class="section-title">
+
+<h2>📅 Fikstür</h2>
+
+</div>
+
+<div class="searchbar">
+
+<input
+    type="date"
+    id="fixtureDate"
+>
+
+<select
+    id="fixtureLeague"
+>
+
+<option value="all">
+Tüm Ligler
+</option>
+
+<option value="Premier League">
+Premier League
+</option>
+
+<option value="La Liga">
+La Liga
+</option>
+
+<option value="Süper Lig">
+Süper Lig
+</option>
+
+<option value="Bundesliga">
+Bundesliga
+</option>
+
+<option value="Serie A">
+Serie A
+</option>
+
+<option value="Ligue 1">
+Ligue 1
+</option>
+
+</select>
+
+<button
+    class="btn"
+    onclick="loadFixtures()"
+>
+Getir
+</button>
+
+</div>
+
+<div
+    id="fixturesContent"
+    class="empty"
+>
+Tarih seç ve maçları getir.
+</div>
+
+</section>
+
+
+<!-- STANDINGS -->
+
+<section
+    id="standings"
+    class="page"
+>
+
+<div class="section-title">
+
+<h2>🏆 Puan Durumu</h2>
+
+</div>
+
+<div class="searchbar">
+
+<input
+    id="standingLeague"
+    placeholder="Örn: Süper Lig"
+>
+
+<input
+    id="standingSeason"
+    value="2026"
+    placeholder="Sezon"
+    style="max-width:130px"
+>
+
+<button
+    class="btn"
+    onclick="loadStandings()"
+>
+Getir
+</button>
+
+</div>
+
+<div
+    id="standingsContent"
+    class="empty"
+>
+Lig adı yaz ve getir.
+</div>
+
+</section>
+
+
+<!-- PLAYERS -->
+
+<section
+    id="players"
+    class="page"
+>
+
+<div class="section-title">
+
+<h2>👤 Oyuncular</h2>
+
+</div>
+
+<div class="searchbar">
+
+<input
+    id="playerSearch"
+    placeholder="Oyuncu ara... Örn: Messi"
+>
+
+<button
+    class="btn"
+    onclick="loadPlayers()"
+>
+Ara
+</button>
+
+</div>
+
+<div
+    id="playersContent"
+    class="empty"
+>
+Oyuncu adı yaz.
+</div>
+
+</section>
+
+
+<!-- TRANSFERS -->
+
+<section
+    id="transfers"
+    class="page"
+>
+
+<div class="section-title">
+
+<h2>🔄 Transferler</h2>
+
+</div>
+
+<div class="searchbar">
+
+<input
+    id="transferTeam"
+    placeholder="Takım ara... Örn: Galatasaray"
+>
+
+<button
+    class="btn"
+    onclick="loadTransfers()"
+>
+Ara
+</button>
+
+</div>
+
+<div
+    id="transfersContent"
+>
+<div class="empty">
+Takım adı yaz.
+</div>
+</div>
+
+</section>
+
+
+<!-- FOLLOW -->
+
+<section
+    id="follow"
+    class="page"
+>
+
+<div class="section-title">
+
+<h2>⭐ Takım Takip</h2>
+
+</div>
+
+<div class="card">
+
+<h3>
+Takım Ara
+</h3>
+
+<p class="muted">
+Gerçek takımı bul, seç ve takip et.
+Takım gol attığında bildirim al.
+</p>
+
+<div class="searchbar">
+
+<input
+    id="teamSearch"
+    placeholder="Örn: Galatasaray, Barcelona, Digger..."
+>
+
+<button
+    class="btn"
+    onclick="searchTeams()"
+>
+Ara
+</button>
+
+</div>
+
+<div
+    id="teamSearchResults"
+></div>
+
+</div>
+
+<br>
+
+<div class="card">
+
+<h3>
+⭐ Takip Ettiklerim
+</h3>
+
+<div
+    id="followedTeams"
+>
+</div>
+
+</div>
+
+</section>
+
+</main>
+
+
+<script>
+
+/* =====================================================
+   STATE
+===================================================== */
+
+let followedTeams =
+    JSON.parse(
+        localStorage.getItem(
+            "goalhub_followed_teams"
+        ) || "[]"
+    );
+
+
+/* =====================================================
+   ESC
+===================================================== */
+
+function esc(value){
+
+    return String(
+        value ?? ""
+    )
+    .replace(
+        /&/g,
+        "&amp;"
+    )
+    .replace(
+        /</g,
+        "&lt;"
+    )
+    .replace(
+        />/g,
+        "&gt;"
+    )
+    .replace(
+        /"/g,
+        "&quot;"
+    )
+    .replace(
+        /'/g,
+        "&#039;"
+    );
+
+}
+
+
+/* =====================================================
+   PAGE
+===================================================== */
+
+function showPage(
+    id,
+    button
+){
+
+    document
+        .querySelectorAll(".page")
+        .forEach(
+            p =>
+                p.classList.remove(
+                    "active"
+                )
+        );
+
+    const page =
+        document.getElementById(
+            id
+        );
+
+    if(page){
+        page.classList.add(
+            "active"
+        );
+    }
+
+    document
+        .querySelectorAll("nav button")
+        .forEach(
+            b =>
+                b.classList.remove(
+                    "active"
+                )
+        );
+
+    if(button){
+        button.classList.add(
+            "active"
+        );
+    }
+
+    if(id === "live"){
+        loadLive();
+    }
+
+    if(id === "home"){
+        checkHealth();
+    }
+
+    if(id === "follow"){
+        renderFollowedTeams();
+    }
+
+}
+
+
+function goPage(id){
+
+    const button =
+        [...document.querySelectorAll(
+            "nav button"
+        )]
+        .find(
+            b =>
+                b.getAttribute(
+                    "onclick"
+                )?.includes(
+                    `'${id}'`
+                )
+        );
+
+    showPage(
+        id,
+        button
+    );
+
+}
+
+
+/* =====================================================
+   HEALTH
+===================================================== */
+
+async function checkHealth(){
+
+    const el =
+        document.getElementById(
+            "homeStatus"
+        );
+
+    try{
+
+        const response =
+            await fetch(
+                "/api/health"
+            );
+
+        const data =
+            await response.json();
+
+        if(el){
+
+            el.textContent =
+                "🟢 Server OK • " +
+                data.node;
+
+        }
+
+    }catch{
+
+        if(el){
+
+            el.textContent =
+                "🔴 Server bağlantısı yok";
+
+        }
+
+    }
+
+}
+
+
+/* =====================================================
+   LOGO
+===================================================== */
+
+function logo(url){
+
+    if(!url){
+        return "";
+    }
+
+    return `
+        <img
+            src="${esc(url)}"
+            onerror="this.style.display='none'"
+        >
+    `;
+
+}
+
+
+/* =====================================================
+   TIME
+===================================================== */
+
+function formatTime(
+    date
+){
+
+    if(!date){
+        return "-";
+    }
+
+    const d =
+        new Date(date);
+
+    if(
+        isNaN(
+            d.getTime()
+        )
+    ){
+        return "-";
+    }
+
+    return d.toLocaleTimeString(
+        "tr-TR",
+        {
+            hour:"2-digit",
+            minute:"2-digit",
+            timeZone:
+                "Europe/Istanbul"
+        }
+    );
+
+}
+
+
+/* =====================================================
+   LIVE
+===================================================== */
+
+async function loadLive(){
+
+    const box =
+        document.getElementById(
+            "liveContent"
+        );
+
+    box.innerHTML =
+        `
+        <div class="loading">
+            🔴 Canlı maçlar yükleniyor...
+        </div>
+        `;
+
+    try{
+
+        const response =
+            await fetch(
+                "/api/live"
+            );
+
+        const data =
+            await response.json();
+
+        if(!response.ok){
+
+            throw new Error(
+                data.details ||
+                data.error ||
+                "Sunucu hatası"
+            );
+
+        }
+
+        const matches =
+            Array.isArray(
+                data.response
+            )
+            ?
+            data.response
+            :
+            [];
+
+        if(
+            !matches.length
+        ){
+
+            box.innerHTML =
+                `
+                <div class="empty">
+                    Şu anda canlı maç bulunmuyor.
+                </div>
+                `;
+
+            return;
+        }
+
+        box.innerHTML =
+            `
+            <div class="matches">
+                ${matches
+                    .map(
+                        renderMatch
+                    )
+                    .join("")}
+            </div>
+            `;
+
+    }catch(error){
+
+        box.innerHTML =
+            `
+            <div class="error">
+                ❌ Canlı maçlar alınamadı.<br>
+                ${esc(error.message)}
+            </div>
+            `;
+
+    }
+
+}
+
+
+/* =====================================================
+   MATCH
+===================================================== */
+
+function renderMatch(
+    match
+){
+
+    const fixture =
+        match.fixture || {};
+
+    const league =
+        match.league || {};
+
+    const teams =
+        match.teams || {};
+
+    const goals =
+        match.goals || {};
+
+    const status =
+        fixture.status || {};
+
+    const home =
+        teams.home || {};
+
+    const away =
+        teams.away || {};
+
+    const scoreHome =
+        goals.home ?? "-";
+
+    const scoreAway =
+        goals.away ?? "-";
+
+    return `
+
+    <div class="match">
+
+        <div class="league">
+
+            🏆
+            ${esc(
+                league.name ||
+                "Lig bilinmiyor"
+            )}
+
+            ${
+                league.country
+                ?
+                " • " +
+                esc(
+                    league.country
+                )
+                :
+                ""
+            }
+
+        </div>
+
+        <div class="matchbody">
+
+            <div class="team">
+
+                ${logo(
+                    home.logo
+                )}
+
+                <div class="teamname">
+                    ${esc(
+                        home.name
+                    )}
+                </div>
+
+            </div>
+
+            <div class="score">
+
+                ${esc(
+                    scoreHome
+                )}
+                -
+                ${esc(
+                    scoreAway
+                )}
+
+                <span class="time">
+
+                    ${
+                        status.elapsed != null
+                        ?
+                        status.elapsed + "'"
+                        :
+                        formatTime(
+                            fixture.date
+                        )
+                    }
+
+                </span>
+
+                <span class="status">
+
+                    ${esc(
+                        status.long ||
+                        "LIVE"
+                    )}
+
+                </span>
+
+            </div>
+
+            <div class="team away">
+
+                <div class="teamname">
+                    ${esc(
+                        away.name
+                    )}
+                </div>
+
+                ${logo(
+                    away.logo
+                )}
+
+            </div>
+
+        </div>
+
+    </div>
+
+    `;
+
+}
+
+
+/* =====================================================
+   FIXTURES
+===================================================== */
+
+async function loadFixtures(){
+
+    const date =
+        document.getElementById(
+            "fixtureDate"
+        ).value;
+
+    const league =
+        document.getElementById(
+            "fixtureLeague"
+        ).value;
+
+    const box =
+        document.getElementById(
+            "fixturesContent"
+        );
+
+    if(!date){
+
+        box.innerHTML =
+            `
+            <div class="error">
+                Önce tarih seç.
+            </div>
+            `;
+
+        return;
+    }
+
+    box.innerHTML =
+        `
+        <div class="loading">
+            📅 Fikstür yükleniyor...
+        </div>
+        `;
+
+    try{
+
+        let url =
+            "/api/fixtures?date=" +
+            encodeURIComponent(
+                date
+            );
+
+        if(
+            league !== "all"
+        ){
+
+            url +=
+                "&league=" +
+                encodeURIComponent(
+                    league
+                ) +
+                "&season=2026";
+
+        }
+
+        const response =
+            await fetch(
+                url
+            );
+
+        const data =
+            await response.json();
+
+        if(!response.ok){
+
+            throw new Error(
+                data.details ||
+                data.error ||
+                "Fikstür alınamadı."
+            );
+
+        }
+
+        let matches =
+            Array.isArray(
+                data.response
+            )
+            ?
+            data.response
+            :
+            [];
+
+        matches.sort(
+            (a,b) =>
+                new Date(
+                    a.fixture?.date || 0
+                ) -
+                new Date(
+                    b.fixture?.date || 0
+                )
+        );
+
+        if(
+            !matches.length
+        ){
+
+            box.innerHTML =
+                `
+                <div class="empty">
+                    Bu tarihte maç bulunamadı.
+                </div>
+                `;
+
+            return;
+        }
+
+        box.innerHTML =
+            `
+            <div class="matches">
+                ${matches
+                    .map(
+                        renderFixture
+                    )
+                    .join("")}
+            </div>
+            `;
+
+    }catch(error){
+
+        box.innerHTML =
+            `
+            <div class="error">
+                ❌ Fikstür alınamadı.<br>
+                ${esc(
+                    error.message
+                )}
+            </div>
+            `;
+
+    }
+
+}
+
+
+/* =====================================================
+   FIXTURE RENDER
+===================================================== */
+
+function renderFixture(
+    match
+){
+
+    const league =
+        match.league || {};
+
+    const home =
+        match.teams?.home || {};
+
+    const away =
+        match.teams?.away || {};
+
+    const goals =
+        match.goals || {};
+
+    const status =
+        match.fixture?.status || {};
+
+    return `
+
+    <div class="match">
+
+        <div class="league">
+
+            🏆
+            ${esc(
+                league.name ||
+                "Lig"
+            )}
+
+            ${
+                league.country
+                ?
+                " • " +
+                esc(
+                    league.country
+                )
+                :
+                ""
+            }
+
+        </div>
+
+        <div class="matchbody">
+
+            <div class="team">
+
+                ${logo(
+                    home.logo
+                )}
+
+                <div class="teamname">
+
+                    ${esc(
+                        home.name
+                    )}
+
+                </div>
+
+            </div>
+
+            <div class="score">
+
+                ${
+                    goals.home != null
+                    ?
+                    `${goals.home} - ${goals.away}`
+                    :
+                    "-"
+                }
+
+                <span class="time">
+
+                    🕒
+                    ${formatTime(
+                        match.fixture?.date
+                    )}
+
+                </span>
+
+                <span class="small">
+
+                    ${esc(
+                        status.long ||
+                        "Maç"
+                    )}
+
+                </span>
+
+            </div>
+
+            <div class="team away">
+
+                <div class="teamname">
+
+                    ${esc(
+                        away.name
+                    )}
+
+                </div>
+
+                ${logo(
+                    away.logo
+                )}
+
+            </div>
+
+        </div>
+
+    </div>
+
+    `;
+
+}
+
+
+/* =====================================================
+   STANDINGS
+===================================================== */
+
+async function loadStandings(){
+
+    const league =
+        document.getElementById(
+            "standingLeague"
+        ).value.trim();
+
+    const season =
+        document.getElementById(
+            "standingSeason"
+        ).value.trim() ||
+        "2026";
+
+    const box =
+        document.getElementById(
+            "standingsContent"
+        );
+
+    if(!league){
+
+        box.innerHTML =
+            `
+            <div class="error">
+                Lig adı gerekli.
+            </div>
+            `;
+
+        return;
+    }
+
+    box.innerHTML =
+        `
+        <div class="loading">
+            🏆 Puan durumu yükleniyor...
+        </div>
+        `;
+
+    try{
+
+        const response =
+            await fetch(
+                "/api/standings?league=" +
+                encodeURIComponent(
+                    league
+                ) +
+                "&season=" +
+                encodeURIComponent(
+                    season
+                )
+            );
+
+        const data =
+            await response.json();
+
+        if(!response.ok){
+
+            throw new Error(
+                data.details ||
+                data.error ||
+                "Puan durumu alınamadı."
+            );
+
+        }
+
+        const leagueData =
+            data.response?.[0];
+
+        const standings =
+            leagueData
+                ?.league
+                ?.standings
+                ?.[0] ||
+            [];
+
+        if(
+            !standings.length
+        ){
+
+            box.innerHTML =
+                `
+                <div class="empty">
+                    Puan durumu bulunamadı.
+                </div>
+                `;
+
+            return;
+        }
+
+        const actualLeagueName =
+            leagueData?.league?.name ||
+            league;
+
+        box.innerHTML = `
+
+        <div
+            class="success"
+        >
+            🏆 ${esc(
+                actualLeagueName
+            )}
+            •
+            ${esc(
+                season
+            )}
+        </div>
+
+        <div class="table-wrap">
+
+        <table>
+
+        <thead>
+
+        <tr>
+
+            <th>#</th>
+            <th>Takım</th>
+            <th>O</th>
+            <th>G</th>
+            <th>B</th>
+            <th>M</th>
+            <th>AV</th>
+            <th>P</th>
+
+        </tr>
+
+        </thead>
+
+        <tbody>
+
+        ${standings
+            .map(row => {
+
+                const team =
+                    row.team || {};
+
+                const all =
+                    row.all || {};
+
+                return `
+
+                <tr>
+
+                    <td>
+                        <b>
+                            ${row.rank ?? "-"}
+                        </b>
+                    </td>
+
+                    <td>
+
+                        <div class="teamcell">
+
+                            ${logo(
+                                team.logo
+                            )}
+
+                            ${esc(
+                                team.name
+                            )}
+
+                        </div>
+
+                    </td>
+
+                    <td>
+                        ${all.played ?? 0}
+                    </td>
+
+                    <td>
+                        ${all.win ?? 0}
+                    </td>
+
+                    <td>
+                        ${all.draw ?? 0}
+                    </td>
+
+                    <td>
+                        ${all.lose ?? 0}
+                    </td>
+
+                    <td>
+                        ${row.goalsDiff ?? 0}
+                    </td>
+
+                    <td>
+                        <b>
+                            ${row.points ?? 0}
+                        </b>
+                    </td>
+
+                </tr>
+
+                `;
+
+            })
+            .join("")}
+
+        </tbody>
+
+        </table>
+
+        </div>
+        `;
+
+    }catch(error){
+
+        box.innerHTML =
+            `
+            <div class="error">
+                ❌ Puan durumu alınamadı.<br>
+                ${esc(
+                    error.message
+                )}
+            </div>
+            `;
+
+    }
+
+}
+
+
+/* =====================================================
+   PLAYERS
+===================================================== */
+
+async function loadPlayers(){
+
+    const search =
+        document.getElementById(
+            "playerSearch"
+        ).value.trim();
+
+    const box =
+        document.getElementById(
+            "playersContent"
+        );
+
+    if(!search){
+
+        box.innerHTML =
+            `
+            <div class="error">
+                Oyuncu adı gerekli.
+            </div>
+            `;
+
+        return;
+    }
+
+    box.innerHTML =
+        `
+        <div class="loading">
+            👤 Oyuncu aranıyor...
+        </div>
+        `;
+
+    try{
+
+        const response =
+            await fetch(
+                "/api/players?search=" +
+                encodeURIComponent(
+                    search
+                )
+            );
+
+        const data =
+            await response.json();
+
+        if(!response.ok){
+
+            throw new Error(
+                data.details ||
+                data.error ||
+                "Oyuncular alınamadı."
+            );
+
+        }
+
+        const players =
+            Array.isArray(
+                data.response
+            )
+            ?
+            data.response
+            :
+            [];
+
+        if(
+            !players.length
+        ){
+
+            box.innerHTML =
+                `
+                <div class="empty">
+                    "${esc(
+                        search
+                    )}"
+                    için oyuncu bulunamadı.
+                </div>
+                `;
+
+            return;
+        }
+
+        box.innerHTML =
+            `
+            <div class="player-grid">
+
+                ${players
+                    .map(
+                        renderPlayer
+                    )
+                    .join("")}
+
+            </div>
+            `;
+
+    }catch(error){
+
+        box.innerHTML =
+            `
+            <div class="error">
+                ❌ Oyuncular alınamadı.<br>
+                ${esc(
+                    error.message
+                )}
+            </div>
+            `;
+
+    }
+
+}
+
+
+/* =====================================================
+   PLAYER
+===================================================== */
+
+function renderPlayer(
+    item
+){
+
+    const player =
+        item.player || {};
+
+    const team =
+        item.statistics
+            ?.[0]
+            ?.team || {};
+
+    return `
+
+    <div class="player">
+
+        <img
+            src="${esc(
+                player.photo || ""
+            )}"
+            onerror="
+                this.src=
+                'https://via.placeholder.com/65?text=⚽'
+            "
+        >
+
+        <div>
+
+            <h3>
+                ${esc(
+                    player.name ||
+                    "Bilinmiyor"
+                )}
+            </h3>
+
+            <p>
+                ${esc(
+                    player.nationality ||
+                    ""
+                )}
+            </p>
+
+            <p>
+                ${esc(
+                    team.name ||
+                    ""
+                )}
+            </p>
+
+            <p>
+                ${
+                    player.age
+                    ?
+                    "Yaş: " +
+                    player.age
+                    :
+                    ""
+                }
+            </p>
+
+        </div>
+
+    </div>
+
+    `;
+
+}
+
+
+/* =====================================================
+   TRANSFERS
+===================================================== */
+
+async function loadTransfers(){
+
+    const team =
+        document.getElementById(
+            "transferTeam"
+        ).value.trim();
+
+    const box =
+        document.getElementById(
+            "transfersContent"
+        );
+
+    if(!team){
+
+        box.innerHTML =
+            `
+            <div class="error">
+                Takım adı gerekli.
+            </div>
+            `;
+
+        return;
+    }
+
+    box.innerHTML =
+        `
+        <div class="loading">
+            🔄 Transferler aranıyor...
+        </div>
+        `;
+
+    try{
+
+        const response =
+            await fetch(
+                "/api/transfers?teamName=" +
+                encodeURIComponent(
+                    team
+                )
+            );
+
+        const data =
+            await response.json();
+
+        if(!response.ok){
+
+            throw new Error(
+                data.details ||
+                data.error ||
+                "Transferler alınamadı."
+            );
+
+        }
+
+        const transfers =
+            Array.isArray(
+                data.response
+            )
+            ?
+            data.response
+            :
+            [];
+
+        if(
+            !transfers.length
+        ){
+
+            box.innerHTML =
+                `
+                <div class="empty">
+                    Transfer bulunamadı.
+                </div>
+                `;
+
+            return;
+        }
+
+        box.innerHTML =
+            transfers
+                .map(
+                    renderTransfer
+                )
+                .join("");
+
+    }catch(error){
+
+        box.innerHTML =
+            `
+            <div class="error">
+                ❌ Transferler alınamadı.<br>
+                ${esc(
+                    error.message
+                )}
+            </div>
+            `;
+
+    }
+
+}
+
+
+/* =====================================================
+   TRANSFER RENDER
+===================================================== */
+
+function renderTransfer(
+    item
+){
+
+    const player =
+        item.player || {};
+
+    const transfer =
+        item.transfers?.[0] ||
+        {};
+
+    const date =
+        transfer.date ||
+        item.update ||
+        "";
+
+    const inTeam =
+        transfer.teams?.in ||
+        {};
+
+    const outTeam =
+        transfer.teams?.out ||
+        {};
+
+    const type =
+        transfer.type ||
+        "";
+
+    return `
+
+    <div class="transfer">
+
+        <div class="transfer-top">
+
+            <div class="transfer-player">
+
+                ${esc(
+                    player.name ||
+                    "Oyuncu"
+                )}
+
+            </div>
+
+            <div class="transfer-date">
+
+                ${esc(
+                    date
+                )}
+
+            </div>
+
+        </div>
+
+        <div class="transfer-row">
+
+            <div class="transfer-team">
+
+                ${
+                    outTeam.logo
+                    ?
+                    `
+                    <img
+                        src="${esc(
+                            outTeam.logo
+                        )}"
+                    >
+                    `
+                    :
+                    ""
+                }
+
+                <span>
+                    ${esc(
+                        outTeam.name ||
+                        "Bilinmiyor"
+                    )}
+                </span>
+
+            </div>
+
+            <b>
+                →
+            </b>
+
+            <div class="transfer-team">
+
+                ${
+                    inTeam.logo
+                    ?
+                    `
+                    <img
+                        src="${esc(
+                            inTeam.logo
+                        )}"
+                    >
+                    `
+                    :
+                    ""
+                }
+
+                <span>
+                    ${esc(
+                        inTeam.name ||
+                        "Bilinmiyor"
+                    )}
+                </span>
+
+            </div>
+
+        </div>
+
+        ${
+            type
+            ?
+            `
+            <div
+                class="small"
+                style="margin-top:8px"
+            >
+                ${esc(type)}
+            </div>
+            `
+            :
+            ""
+        }
+
+    </div>
+
+    `;
+
+}
+
+
+/* =====================================================
+   TEAM SEARCH
+===================================================== */
+
+async function searchTeams(){
+
+    const input =
+        document.getElementById(
+            "teamSearch"
+        );
+
+    const box =
+        document.getElementById(
+            "teamSearchResults"
+        );
+
+    const name =
+        input.value.trim();
+
+    if(!name){
+
+        box.innerHTML =
+            `
+            <div class="error">
+                Takım adı yaz.
+            </div>
+            `;
+
+        return;
+    }
+
+    box.innerHTML =
+        `
+        <div class="loading">
+            🔎 Gerçek takımlar aranıyor...
+        </div>
+        `;
+
+    try{
+
+        const response =
+            await fetch(
+                "/api/team-search?name=" +
+                encodeURIComponent(
+                    name
+                )
+            );
+
+        const data =
+            await response.json();
+
+        if(!response.ok){
+
+            throw new Error(
+                data.details ||
+                data.error ||
+                "Takım araması başarısız."
+            );
+
+        }
+
+        const teams =
+            Array.isArray(
+                data.response
+            )
+            ?
+            data.response
+            :
+            [];
+
+        if(
+            !teams.length
+        ){
+
+            box.innerHTML =
+                `
+                <div class="empty">
+                    "${esc(
+                        name
+                    )}"
+                    için takım bulunamadı.
+                </div>
+                `;
+
+            return;
+        }
+
+        box.innerHTML =
+            teams
+                .map(
+                    renderTeamResult
+                )
+                .join("");
+
+    }catch(error){
+
+        box.innerHTML =
+            `
+            <div class="error">
+                ❌ Takım aranamadı.<br>
+                ${esc(
+                    error.message
+                )}
+            </div>
+            `;
+
+    }
+
+}
+
+
+/* =====================================================
+   TEAM RESULT
+===================================================== */
+
+function renderTeamResult(
+    item
+){
+
+    const team =
+        item.team || {};
+
+    const id =
+        Number(
+            team.id
+        );
+
+    if(!id){
+        return "";
+    }
+
+    const already =
+        followedTeams.some(
+            t =>
+                Number(t.id) === id
+        );
+
+    return `
+
+    <div class="follow-team">
+
+        <div class="follow-left">
+
+            ${
+                team.logo
+                ?
+                `
+                <img
+                    src="${esc(
+                        team.logo
+                    )}"
+                >
+                `
+                :
+                ""
+            }
+
+            <div>
+
+                <div
+                    style="
+                        font-weight:bold;
+                        font-size:17px;
+                    "
+                >
+
+                    ${esc(
+                        team.name ||
+                        "Bilinmiyor"
+                    )}
+
+                </div>
+
+                <div class="small">
+
+                    ${esc(
+                        team.country ||
+                        ""
+                    )}
+
+                    ${
+                        team.code
+                        ?
+                        " • " +
+                        esc(
+                            team.code
+                        )
+                        :
+                        ""
+                    }
+
+                </div>
+
+                <div class="small">
+
+                    Gerçek Takım ID:
+                    ${id}
+
+                </div>
+
+            </div>
+
+        </div>
+
+        ${
+            already
+            ?
+            `
+            <button
+                class="btn secondary"
+                disabled
+            >
+                ✓ Takipte
+            </button>
+            `
+            :
+            `
+            <button
+                class="btn"
+                onclick="followTeam(
+                    ${id},
+                    '${escapeJS(
+                        team.name ||
+                        ""
+                    )}',
+                    '${escapeJS(
+                        team.logo ||
+                        ""
+                    )}',
+                    '${escapeJS(
+                        team.country ||
+                        ""
+                    )}'
+                )"
+            >
+                ⭐ Takip Et
+            </button>
+            `
+        }
+
+    </div>
+
+    `;
+
+}
+
+
+/* =====================================================
+   JS ESCAPE
+===================================================== */
+
+function escapeJS(
+    value
+){
+
+    return String(
+        value ?? ""
+    )
+    .replace(
+        /\\/g,
+        "\\\\"
+    )
+    .replace(
+        /'/g,
+        "\\'"
+    )
+    .replace(
+        /"/g,
+        '\\"'
+    )
+    .replace(
+        /\n/g,
+        "\\n"
+    )
+    .replace(
+        /\r/g,
+        "\\r"
+    );
+
+}
+
+
+/* =====================================================
+   SAVE TEAMS
+===================================================== */
+
+function saveFollowedTeams(){
+
+    localStorage.setItem(
+        "goalhub_followed_teams",
+        JSON.stringify(
+            followedTeams
+        )
+    );
+
+}
+
+
+/* =====================================================
+   FOLLOW TEAM
+===================================================== */
+
+async function followTeam(
+    id,
+    name,
+    logoUrl,
+    country
+){
+
+    id =
+        Number(id);
+
+    if(!id){
+        return;
+    }
+
+    if(
+        followedTeams.some(
+            t =>
+                Number(t.id) === id
+        )
+    ){
+
+        return;
+
+    }
+
+    followedTeams.push({
+
+        id,
+
+        name:
+            name || "",
+
+        logo:
+            logoUrl || "",
+
+        country:
+            country || ""
+
+    });
+
+    saveFollowedTeams();
+
+    renderFollowedTeams();
+
+    try{
+
+        await requestNotificationPermission();
+
+        await updatePushSubscription();
+
+        alert(
+            "⭐ " +
+            name +
+            " takip edildi!\n\n" +
+            "⚽ Bu takım gol attığında " +
+            "bildirim alacaksın."
+        );
+
+    }catch(error){
+
+        console.error(
+            "FOLLOW PUSH ERROR:",
+            error
+        );
+
+        alert(
+            "Takım takip edildi.\n\n" +
+            "Ancak bildirim kurulurken " +
+            "bir sorun oluştu:\n" +
+            error.message
+        );
+
+    }
+
+    searchTeams();
+
+}
+
+
+/* =====================================================
+   UNFOLLOW
+===================================================== */
+
+async function unfollowTeam(
+    id
+){
+
+    id =
+        Number(id);
+
+    followedTeams =
+        followedTeams.filter(
+            team =>
+                Number(team.id) !== id
+        );
+
+    saveFollowedTeams();
+
+    renderFollowedTeams();
+
+    try{
+
+        await updatePushSubscription();
+
+    }catch(error){
+
+        console.error(
+            error
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   RENDER FOLLOWED
+===================================================== */
+
+function renderFollowedTeams(){
+
+    const box =
+        document.getElementById(
+            "followedTeams"
+        );
+
+    if(!box){
+        return;
+    }
+
+    if(
+        !followedTeams.length
+    ){
+
+        box.innerHTML =
+            `
+            <div class="empty">
+                Henüz takip edilen takım yok.
+            </div>
+            `;
+
+        return;
+    }
+
+    box.innerHTML =
+        followedTeams
+            .map(team => `
+
+                <div
+                    class="follow-team"
+                >
+
+                    <div
+                        class="follow-left"
+                    >
+
+                        ${
+                            team.logo
+                            ?
+                            `
+                            <img
+                                src="${esc(
+                                    team.logo
+                                )}"
+                            >
+                            `
+                            :
+                            ""
+                        }
+
+                        <div>
+
+                            <div
+                                style="
+                                    font-weight:bold;
+                                    font-size:17px;
+                                "
+                            >
+                                ${esc(
+                                    team.name
+                                )}
+                            </div>
+
+                            <div
+                                class="small"
+                            >
+                                ${esc(
+                                    team.country ||
+                                    ""
+                                )}
+
+                                • ID:
+                                ${Number(
+                                    team.id
+                                )}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <button
+                        class="btn secondary"
+                        onclick="
+                            unfollowTeam(
+                                ${Number(
+                                    team.id
+                                )}
+                            )
+                        "
+                    >
+                        Takibi Bırak
+                    </button>
+
+                </div>
+
+            `)
+            .join("");
+
+}
+
+
+/* =====================================================
+   NOTIFICATION PERMISSION
+===================================================== */
+
+async function requestNotificationPermission(){
+
+    if(
+        !("Notification" in window)
+    ){
+
+        throw new Error(
+            "Bu tarayıcı bildirimleri desteklemiyor."
+        );
+
+    }
+
+    if(
+        Notification.permission ===
+        "granted"
+    ){
+
+        return true;
+
+    }
+
+    const permission =
+        await Notification.requestPermission();
+
+    if(
+        permission !==
+        "granted"
+    ){
+
+        throw new Error(
+            "Bildirim izni verilmedi."
+        );
+
+    }
+
+    return true;
+
+}
+
+
+/* =====================================================
+   PUSH SUBSCRIPTION
+===================================================== */
+
+async function updatePushSubscription(){
+
+    if(
+        !("serviceWorker" in navigator)
+    ){
+
+        throw new Error(
+            "Service Worker desteklenmiyor."
+        );
+
+    }
+
+    if(
+        !("PushManager" in window)
+    ){
+
+        throw new Error(
+            "Push bildirimi desteklenmiyor."
+        );
+
+    }
+
+    const registration =
+        await navigator
+            .serviceWorker
+            .ready;
+
+    let subscription =
+        await registration
+            .pushManager
+            .getSubscription();
+
+    if(!subscription){
+
+        const keyResponse =
+            await fetch(
+                "/api/push/public-key"
+            );
+
+        const keyData =
+            await keyResponse.json();
+
+        if(
+            !keyResponse.ok ||
+            !keyData.publicKey
+        ){
+
+            throw new Error(
+                "Push public key alınamadı."
+            );
+
+        }
+
+        subscription =
+            await registration
+                .pushManager
+                .subscribe({
+
+                    userVisibleOnly:
+                        true,
+
+                    applicationServerKey:
+                        urlBase64ToUint8Array(
+                            keyData.publicKey
+                        )
+
+                });
+
+    }
+
+    const response =
+        await fetch(
+            "/api/push/subscribe",
+            {
+
+                method:
+                    "POST",
+
+                headers:{
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body:
+                    JSON.stringify({
+
+                        subscription:
+                            subscription.toJSON(),
+
+                        teams:
+                            followedTeams.map(
+                                team =>
+                                    Number(
+                                        team.id
+                                    )
+                            )
+
+                    })
+
+            }
+        );
+
+    const data =
+        await response.json();
+
+    if(!response.ok){
+
+        throw new Error(
+            data.details ||
+            data.error ||
+            "Push aboneliği kaydedilemedi."
+        );
+
+    }
+
+    console.log(
+        "🔔 PUSH AKTİF",
+        data
+    );
+
+}
+
+
+/* =====================================================
+   BASE64
+===================================================== */
+
+function urlBase64ToUint8Array(
+    base64String
+){
+
+    const padding =
+        "=".repeat(
+            (
+                4 -
+                base64String.length % 4
+            ) % 4
+        );
+
+    const base64 =
+        (
+            base64String +
+            padding
+        )
+        .replace(
+            /-/g,
+            "+"
+        )
+        .replace(
+            /_/g,
+            "/"
+        );
+
+    const rawData =
+        window.atob(
+            base64
+        );
+
+    const outputArray =
+        new Uint8Array(
+            rawData.length
+        );
+
+    for(
+        let i = 0;
+        i < rawData.length;
+        ++i
+    ){
+
+        outputArray[i] =
+            rawData.charCodeAt(i);
+
+    }
+
+    return outputArray;
+
+}
+
+
+/* =====================================================
+   SERVICE WORKER REGISTER
+===================================================== */
+
+if(
+    "serviceWorker" in navigator
+){
+
+    navigator
+        .serviceWorker
+        .register(
+            "/service-worker.js"
+        )
+        .then(
+            registration => {
+
+                console.log(
+                    "✅ Service Worker aktif:",
+                    registration.scope
+                );
+
+            }
+        )
+        .catch(
+            error => {
+
+                console.error(
+                    "❌ Service Worker:",
+                    error
+                );
+
+            }
+        );
+
+}
+
+
+/* =====================================================
+   ENTER KEYS
+===================================================== */
+
+document
+    .getElementById(
+        "teamSearch"
+    )
+    ?.addEventListener(
+        "keydown",
+        e => {
+
+            if(
+                e.key === "Enter"
+            ){
+
+                searchTeams();
+
+            }
+
+        }
+    );
+
+document
+    .getElementById(
+        "playerSearch"
+    )
+    ?.addEventListener(
+        "keydown",
+        e => {
+
+            if(
+                e.key === "Enter"
+            ){
+
+                loadPlayers();
+
+            }
+
+        }
+    );
+
+document
+    .getElementById(
+        "transferTeam"
+    )
+    ?.addEventListener(
+        "keydown",
+        e => {
+
+            if(
+                e.key === "Enter"
+            ){
+
+                loadTransfers();
+
+            }
+
+        }
+    );
+
+document
+    .getElementById(
+        "standingLeague"
+    )
+    ?.addEventListener(
+        "keydown",
+        e => {
+
+            if(
+                e.key === "Enter"
+            ){
+
+                loadStandings();
+
+            }
+
+        }
+    );
+
+
+/* =====================================================
+   DEFAULT DATE
+===================================================== */
+
+const dateInput =
+    document.getElementById(
+        "fixtureDate"
+    );
+
+if(dateInput){
+
+    const now =
+        new Date();
+
+    const year =
+        now.getFullYear();
+
+    const month =
+        String(
+            now.getMonth() + 1
+        )
+        .padStart(
+            2,
+            "0"
+        );
+
+    const day =
+        String(
+            now.getDate()
+        )
+        .padStart(
+            2,
+            "0"
+        );
+
+    dateInput.value =
+        `${year}-${month}-${day}`;
+
+}
+
+
+/* =====================================================
+   START
+===================================================== */
+
+renderFollowedTeams();
+
+checkHealth();
+
+</script>
+
+</body>
+</html>
