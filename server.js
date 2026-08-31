@@ -4,8 +4,7 @@ const path = require("path");
 require("dotenv").config();
 
 const app = express();
-
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const API_BASE = "https://v3.football.api-sports.io";
 const API_KEY = process.env.API_KEY;
 
