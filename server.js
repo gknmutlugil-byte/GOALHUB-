@@ -1,181 +1,126 @@
-require("dotenv").config();
 
 const express = require("express");
 const path = require("path");
-const webpush = require("web-push");
+require("dotenv").config();
 
 const app = express();
-const PORT = Number(process.env.PORT) || 3000;;
 
-const API_KEY = process.env.API_FOOTBALL_KEY;
+const PORT = 3000;
+const API_BASE = "https://v3.football.api-sports.io";
+const API_KEY = process.env.API_KEY;
+
+// ======================================================
+// API KEY KONTROL
+// ======================================================
 
 if (!API_KEY) {
-    console.error("❌ API_FOOTBALL_KEY bulunamadı.");
-    console.error("❌ .env dosyanı kontrol et.");
+    console.error("");
+    console.error("❌ API_KEY bulunamadı!");
+    console.error("📌 .env dosyanı kontrol et.");
+    console.error("");
     process.exit(1);
 }
 
-const API_BASE = "https://v3.football.api-sports.io";
+// ======================================================
+// EXPRESS
+// ======================================================
 
-app.use(express.json({ limit: "1mb" }));
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static(__dirname));
+app.use(express.json());
 
-/* =========================================================
-   VAPID
-========================================================= */
-
-const VAPID_PUBLIC_KEY =
-    process.env.VAPID_PUBLIC_KEY;
-
-const VAPID_PRIVATE_KEY =
-    process.env.VAPID_PRIVATE_KEY;
-
-if (
-    !VAPID_PUBLIC_KEY ||
-    !VAPID_PRIVATE_KEY
-) {
-    console.error("❌ VAPID anahtarları bulunamadı.");
-    console.error("VAPID_PUBLIC_KEY gerekli.");
-    console.error("VAPID_PRIVATE_KEY gerekli.");
-    process.exit(1);
-}
-
-webpush.setVapidDetails(
-    "mailto:goalhub@example.com",
-    VAPID_PUBLIC_KEY,
-    VAPID_PRIVATE_KEY
+app.use(
+    express.static(
+        path.join(__dirname, "public")
+    )
 );
 
-/* =========================================================
-   MEMORY DATA
-========================================================= */
+// ======================================================
+// API HELPER
+// ======================================================
 
-/*
-   endpoint -> {
-       subscription,
-       teams: [123,456]
-   }
-*/
+async function footballAPI(endpoint, params = {}) {
 
-const subscriptions = new Map();
-
-/*
-   fixtureId -> {
-       home,
-       away
-   }
-*/
-
-const knownGoals = new Map();
-
-/* =========================================================
-   API HELPER
-========================================================= */
-
-async function footballAPI(
-    endpoint,
-    params = {}
-) {
-
-    const url =
-        new URL(
-            API_BASE + endpoint
-        );
-
-    Object.entries(params)
-        .forEach(([key, value]) => {
-
-            if (
-                value !== undefined &&
-                value !== null &&
-                value !== ""
-            ) {
-
-                url.searchParams.set(
-                    key,
-                    value
-                );
-            }
-        });
-
-    console.log(
-        "API:",
-        url.pathname +
-        url.search
+    const url = new URL(
+        API_BASE + endpoint
     );
 
-    const response =
-        await fetch(
-            url,
-            {
-                headers: {
-                    "x-apisports-key":
-                        API_KEY
-                }
+    for (const [key, value] of Object.entries(params)) {
+
+        if (
+            value !== undefined &&
+            value !== null &&
+            value !== ""
+        ) {
+
+            url.searchParams.set(
+                key,
+                value
+            );
+        }
+    }
+
+    console.log(
+        "➡️ API:",
+        endpoint,
+        Object.fromEntries(
+            url.searchParams.entries()
+        )
+    );
+
+    const response = await fetch(
+        url,
+        {
+            method: "GET",
+            headers: {
+                "x-apisports-key": API_KEY
             }
-        );
+        }
+    );
+
+    const text =
+        await response.text();
 
     let data;
 
     try {
 
-        data =
-            await response.json();
+        data = JSON.parse(text);
 
     } catch {
 
         throw new Error(
-            "API-Football geçersiz cevap verdi."
+            "API geçersiz JSON döndürdü: " +
+            text.substring(0, 500)
         );
+
     }
 
     if (!response.ok) {
 
         throw new Error(
-            data?.message ||
-            `API-Football HTTP ${response.status}`
+            `API HTTP ${response.status}`
         );
+
     }
 
     if (
         data.errors &&
-        Object.keys(data.errors).length
+        Object.keys(data.errors).length > 0
     ) {
 
         throw new Error(
-            Object.entries(data.errors)
-                .map(
-                    ([key, value]) =>
-                        `${key}: ${value}`
-                )
-                .join(" | ")
+            JSON.stringify(
+                data.errors
+            )
         );
+
     }
 
     return data;
 }
 
-/* =========================================================
-   HEALTH
-========================================================= */
-
-app.get(
-    "/api/health",
-    (req, res) => {
-
-        res.json({
-            ok: true,
-            name: "GOALHUB",
-            node: process.version
-        });
-
-    }
-);
-
-/* =========================================================
-   API TEST
-========================================================= */
+// ======================================================
+// API TEST
+// ======================================================
 
 app.get(
     "/api/test",
@@ -189,19 +134,30 @@ app.get(
                 );
 
             res.json({
-                ok: true,
+
+                success: true,
+
                 message:
-                    "GOALHUB API is working",
-                api:
-                    data.response
+                    "GOALHUB API bağlantısı çalışıyor.",
+
+                api: data
+
             });
 
         } catch (error) {
 
+            console.error(
+                "❌ TEST:",
+                error
+            );
+
             res.status(500).json({
-                ok: false,
+
+                success: false,
+
                 error:
                     error.message
+
             });
 
         }
@@ -209,9 +165,42 @@ app.get(
     }
 );
 
-/* =========================================================
-   LIVE
-========================================================= */
+// ======================================================
+// STATUS
+// ======================================================
+
+app.get(
+    "/api/status",
+    async (req, res) => {
+
+        try {
+
+            const data =
+                await footballAPI(
+                    "/status"
+                );
+
+            res.json(data);
+
+        } catch (error) {
+
+            res.status(500).json({
+
+                success: false,
+
+                error:
+                    error.message
+
+            });
+
+        }
+
+    }
+);
+
+// ======================================================
+// LIVE MATCHES
+// ======================================================
 
 app.get(
     "/api/live",
@@ -227,25 +216,22 @@ app.get(
                     }
                 );
 
-            res.json({
-                ok: true,
-                response:
-                    data.response || []
-            });
+            res.json(data);
 
         } catch (error) {
 
             console.error(
-                "LIVE ERROR:",
-                error.message
+                "❌ LIVE:",
+                error
             );
 
             res.status(500).json({
-                ok: false,
+
+                success: false,
+
                 error:
-                    "LIVE_API_ERROR",
-                details:
                     error.message
+
             });
 
         }
@@ -253,182 +239,51 @@ app.get(
     }
 );
 
-/* =========================================================
-   LEAGUE SEARCH
-========================================================= */
-
-app.get(
-    "/api/leagues",
-    async (req, res) => {
-
-        const name =
-            String(
-                req.query.name || ""
-            ).trim();
-
-        if (!name) {
-
-            return res.status(400).json({
-                ok: false,
-                error:
-                    "Lig adı gerekli."
-            });
-
-        }
-
-        try {
-
-            const data =
-                await footballAPI(
-                    "/leagues",
-                    {
-                        search: name
-                    }
-                );
-
-            const leagues =
-                (data.response || [])
-                    .map(item => ({
-
-                        id:
-                            item.league?.id,
-
-                        name:
-                            item.league?.name,
-
-                        type:
-                            item.league?.type,
-
-                        country:
-                            item.country?.name,
-
-                        seasons:
-                            item.seasons || []
-
-                    }));
-
-            res.json({
-                ok: true,
-                response:
-                    leagues
-            });
-
-        } catch (error) {
-
-            res.status(500).json({
-                ok: false,
-                error:
-                    error.message
-            });
-
-        }
-
-    }
-);
-
-/* =========================================================
-   FIND LEAGUE
-========================================================= */
-
-async function findLeague(
-    leagueName
-) {
-
-    const data =
-        await footballAPI(
-            "/leagues",
-            {
-                search:
-                    leagueName
-            }
-        );
-
-    const list =
-        data.response || [];
-
-    if (!list.length) {
-        return null;
-    }
-
-    const exact =
-        list.find(item =>
-
-            String(
-                item.league?.name || ""
-            )
-            .toLowerCase()
-            ===
-            leagueName.toLowerCase()
-
-        );
-
-    return exact || list[0];
-}
-
-/* =========================================================
-   FIXTURES
-========================================================= */
+// ======================================================
+// FIXTURES
+// ======================================================
 
 app.get(
     "/api/fixtures",
     async (req, res) => {
 
-        const date =
-            String(
-                req.query.date || ""
-            ).trim();
-
-        const leagueName =
-            String(
-                req.query.league || ""
-            ).trim();
-
-        const season =
-            String(
-                req.query.season || "2026"
-            ).trim();
-
-        if (!date) {
-
-            return res.status(400).json({
-                ok: false,
-                error:
-                    "Tarih gerekli."
-            });
-
-        }
-
         try {
 
+            const date =
+                req.query.date;
+
+            const league =
+                req.query.league;
+
+            const season =
+                req.query.season ||
+                2026;
+
+            if (!date) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    error:
+                        "date parametresi gerekli."
+
+                });
+
+            }
+
             const params = {
-                date
+
+                date,
+                season
+
             };
 
-            if (
-                leagueName &&
-                leagueName !== "all"
-            ) {
-
-                const found =
-                    await findLeague(
-                        leagueName
-                    );
-
-                if (!found?.league?.id) {
-
-                    return res.status(404).json({
-                        ok: false,
-                        error:
-                            `"${leagueName}" adlı lig bulunamadı.`
-                    });
-
-                }
+            if (league) {
 
                 params.league =
-                    found.league.id;
+                    league;
 
-                params.season =
-                    season;
             }
 
             const data =
@@ -437,25 +292,22 @@ app.get(
                     params
                 );
 
-            res.json({
-                ok: true,
-                response:
-                    data.response || []
-            });
+            res.json(data);
 
         } catch (error) {
 
             console.error(
-                "FIXTURES ERROR:",
-                error.message
+                "❌ FIXTURES:",
+                error
             );
 
             res.status(500).json({
-                ok: false,
+
+                success: false,
+
                 error:
-                    "FIXTURES_API_ERROR",
-                details:
                     error.message
+
             });
 
         }
@@ -463,80 +315,59 @@ app.get(
     }
 );
 
-/* =========================================================
-   STANDINGS
-========================================================= */
+// ======================================================
+// LEAGUES SEARCH
+// ======================================================
 
 app.get(
-    "/api/standings",
+    "/api/leagues",
     async (req, res) => {
-
-        const leagueName =
-            String(
-                req.query.league || ""
-            ).trim();
-
-        const season =
-            String(
-                req.query.season || "2026"
-            ).trim();
-
-        if (!leagueName) {
-
-            return res.status(400).json({
-                ok: false,
-                error:
-                    "Lig adı gerekli."
-            });
-
-        }
 
         try {
 
-            const found =
-                await findLeague(
-                    leagueName
-                );
+            const search =
+                (
+                    req.query.search ||
+                    ""
+                ).trim();
 
-            if (!found?.league?.id) {
+            if (!search) {
 
-                return res.status(404).json({
-                    ok: false,
+                return res.status(400).json({
+
+                    success: false,
+
                     error:
-                        `"${leagueName}" adlı lig bulunamadı.`
+                        "Lig adı gerekli."
+
                 });
 
             }
 
             const data =
                 await footballAPI(
-                    "/standings",
+                    "/leagues",
                     {
-                        league:
-                            found.league.id,
-                        season
+                        search
                     }
                 );
 
-            res.json({
-                ok: true,
-                response:
-                    data.response || []
-            });
+            res.json(data);
 
         } catch (error) {
 
             console.error(
-                "STANDINGS ERROR:",
-                error.message
+                "❌ LEAGUES:",
+                error
             );
 
             res.status(500).json({
-                ok: false,
+
+                success: false,
+
                 error:
-                    "STANDINGS_API_ERROR",
-                details:
                     error.message
+
             });
 
         }
@@ -544,28 +375,73 @@ app.get(
     }
 );
 
-/* =========================================================
-   TEAM SEARCH
-========================================================= */
+// ======================================================
+// TEAMS SEARCH
+// ======================================================
 
 app.get(
-    "/api/team-search",
+    "/api/teams",
     async (req, res) => {
 
-        const name =
-            String(
-                req.query.name || ""
-            ).trim();
+        try {
 
-        if (!name) {
+            const search =
+                (
+                    req.query.search ||
+                    ""
+                ).trim();
 
-            return res.status(400).json({
-                ok: false,
+            if (!search) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    error:
+                        "Takım adı gerekli."
+
+                });
+
+            }
+
+            const data =
+                await footballAPI(
+                    "/teams",
+                    {
+                        search
+                    }
+                );
+
+            res.json(data);
+
+        } catch (error) {
+
+            console.error(
+                "❌ TEAMS:",
+                error
+            );
+
+            res.status(500).json({
+
+                success: false,
+
                 error:
-                    "Takım adı gerekli."
+                    error.message
+
             });
 
         }
+
+    }
+);
+
+// ======================================================
+// TEAM DETAIL
+// ======================================================
+
+app.get(
+    "/api/team/:id",
+    async (req, res) => {
 
         try {
 
@@ -573,41 +449,27 @@ app.get(
                 await footballAPI(
                     "/teams",
                     {
-                        search: name
+                        id:
+                            req.params.id
                     }
                 );
 
-            const teams =
-                (data.response || [])
-                    .map(item => ({
-
-                        team:
-                            item.team,
-
-                        venue:
-                            item.venue
-
-                    }));
-
-            res.json({
-                ok: true,
-                response:
-                    teams
-            });
+            res.json(data);
 
         } catch (error) {
 
             console.error(
-                "TEAM SEARCH ERROR:",
-                error.message
+                "❌ TEAM DETAIL:",
+                error
             );
 
             res.status(500).json({
-                ok: false,
+
+                success: false,
+
                 error:
-                    "TEAM_SEARCH_API_ERROR",
-                details:
                     error.message
+
             });
 
         }
@@ -615,51 +477,155 @@ app.get(
     }
 );
 
-/* =========================================================
-   PLAYERS
-========================================================= */
+// ======================================================
+// TEAM SQUAD
+// ======================================================
+
+app.get(
+    "/api/team/:id/squad",
+    async (req, res) => {
+
+        try {
+
+            const data =
+                await footballAPI(
+                    "/players/squads",
+                    {
+                        team:
+                            req.params.id
+                    }
+                );
+
+            res.json(data);
+
+        } catch (error) {
+
+            console.error(
+                "❌ SQUAD:",
+                error
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                error:
+                    error.message
+
+            });
+
+        }
+
+    }
+);
+
+// ======================================================
+// PLAYER SEARCH
+// ======================================================
 
 app.get(
     "/api/players",
     async (req, res) => {
 
-        const search =
-            String(
-                req.query.search || ""
-            ).trim();
-
-        if (!search) {
-
-            return res.status(400).json({
-                ok: false,
-                error:
-                    "Oyuncu adı gerekli."
-            });
-
-        }
-
         try {
 
-            /*
-               API-Football bazı hesaplarda
-               search parametresiyle beraber
-               league/team istiyor.
+            const search =
+                (
+                    req.query.search ||
+                    ""
+                ).trim();
 
-               Bu yüzden birkaç büyük ligde
-               arama yapıyoruz.
-            */
+            const team =
+                req.query.team;
+
+            const league =
+                req.query.league;
+
+            const season =
+                req.query.season ||
+                2026;
+
+            if (!search && !team && !league) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    error:
+                        "Oyuncu adı, takım veya lig gerekli."
+
+                });
+
+            }
+
+            // ------------------------------------------------
+            // TEAM / LEAGUE
+            // ------------------------------------------------
+
+            if (
+                team ||
+                league
+            ) {
+
+                const params = {
+
+                    season
+
+                };
+
+                if (team) {
+
+                    params.team =
+                        team;
+
+                }
+
+                if (league) {
+
+                    params.league =
+                        league;
+
+                }
+
+                if (search) {
+
+                    params.search =
+                        search;
+
+                }
+
+                console.log(
+                    "🔎 PLAYER:",
+                    params
+                );
+
+                const data =
+                    await footballAPI(
+                        "/players",
+                        params
+                    );
+
+                return res.json(data);
+
+            }
+
+            // ------------------------------------------------
+            // SADECE OYUNCU ADI
+            // ------------------------------------------------
 
             const leagues = [
-                39,  // Premier League
-                140, // La Liga
-                135, // Serie A
-                78,  // Bundesliga
-                61,  // Ligue 1
-                203, // Süper Lig
-                253  // MLS
+
+                39,
+                140,
+                135,
+                78,
+                61,
+                203,
+                2
+
             ];
 
-            let allPlayers = [];
+            const results = [];
 
             for (
                 const leagueId
@@ -672,81 +638,115 @@ app.get(
                         await footballAPI(
                             "/players",
                             {
-                                search,
                                 league:
                                     leagueId,
+
                                 season:
-                                    2026
+                                    season,
+
+                                search:
+                                    search
                             }
                         );
 
                     if (
-                        Array.isArray(
-                            data.response
-                        )
+                        data.response &&
+                        data.response.length
                     ) {
 
-                        allPlayers =
-                            allPlayers.concat(
-                                data.response
-                            );
+                        results.push(
+                            ...data.response
+                        );
+
                     }
 
-                } catch (error) {
+                } catch (e) {
 
                     console.log(
-                        "PLAYER LEAGUE SKIP:",
+                        "⚠️ Lig",
                         leagueId,
-                        error.message
+                        "atlanıyor:",
+                        e.message
                     );
 
                 }
 
             }
 
-            /*
-               Aynı oyuncuları temizle.
-            */
+            // ------------------------------------------------
+            // DUPLICATE TEMİZLE
+            // ------------------------------------------------
 
-            const unique =
-                new Map();
+            const unique = [];
+
+            const seen =
+                new Set();
 
             for (
                 const item
-                of allPlayers
+                of results
             ) {
 
-                const id =
-                    item.player?.id;
+                if (
+                    !item.player ||
+                    !item.player.id
+                ) {
 
-                if(id){
-                    unique.set(
-                        id,
-                        item
-                    );
+                    continue;
+
                 }
+
+                if (
+                    seen.has(
+                        item.player.id
+                    )
+                ) {
+
+                    continue;
+
+                }
+
+                seen.add(
+                    item.player.id
+                );
+
+                unique.push(
+                    item
+                );
 
             }
 
+            console.log(
+                "✅ Bulunan oyuncu:",
+                unique.length
+            );
+
             res.json({
-                ok: true,
+
+                success: true,
+
+                results:
+                    unique.length,
+
                 response:
-                    [...unique.values()]
+                    unique
+
             });
 
         } catch (error) {
 
             console.error(
-                "PLAYERS ERROR:",
-                error.message
+                "❌ PLAYER SEARCH:",
+                error
             );
 
             res.status(500).json({
-                ok: false,
+
+                success: false,
+
                 error:
-                    "PLAYERS_API_ERROR",
-                details:
                     error.message
+
             });
 
         }
@@ -754,142 +754,152 @@ app.get(
     }
 );
 
-/* =========================================================
-   TRANSFERS
-========================================================= */
+// ======================================================
+// PLAYER DETAIL
+// ======================================================
 
 app.get(
-    "/api/transfers",
+    "/api/player/:id",
     async (req, res) => {
 
-        const teamName =
-            String(
-                req.query.teamName ||
-                req.query.team ||
-                ""
-            ).trim();
+        try {
 
-        if (!teamName) {
+            const id =
+                req.params.id;
 
-            return res.status(400).json({
-                ok: false,
+            const season =
+                req.query.season ||
+                2026;
+
+            const data =
+                await footballAPI(
+                    "/players",
+                    {
+                        id,
+                        season
+                    }
+                );
+
+            res.json(data);
+
+        } catch (error) {
+
+            console.error(
+                "❌ PLAYER DETAIL:",
+                error
+            );
+
+            res.status(500).json({
+
+                success: false,
+
                 error:
-                    "Takım adı gerekli."
+                    error.message
+
             });
 
         }
 
+    }
+);
+
+// ======================================================
+// PLAYER TRANSFERS
+// ======================================================
+
+app.get(
+    "/api/transfers/:id",
+    async (req, res) => {
+
         try {
 
-            const teamData =
+            const data =
                 await footballAPI(
-                    "/teams",
+                    "/transfers",
                     {
-                        search:
-                            teamName
+                        player:
+                            req.params.id
                     }
                 );
 
-            const team =
-                (teamData.response || [])
-                    .find(item =>
+            res.json(data);
 
-                        String(
-                            item.team?.name || ""
-                        )
-                        .toLowerCase()
-                        ===
-                        teamName.toLowerCase()
+        } catch (error) {
 
-                    )
-                    ||
-                    (teamData.response || [])[0];
+            console.error(
+                "❌ TRANSFERS:",
+                error
+            );
 
-            if (!team?.team?.id) {
+            res.status(500).json({
 
-                return res.status(404).json({
-                    ok: false,
+                success: false,
+
+                error:
+                    error.message
+
+            });
+
+        }
+
+    }
+);
+
+// ======================================================
+// STANDINGS
+// ======================================================
+
+app.get(
+    "/api/standings",
+    async (req, res) => {
+
+        try {
+
+            const league =
+                req.query.league;
+
+            const season =
+                req.query.season ||
+                2026;
+
+            if (!league) {
+
+                return res.status(400).json({
+
+                    success: false,
+
                     error:
-                        `"${teamName}" adlı takım bulunamadı.`
+                        "league parametresi gerekli."
+
                 });
 
             }
 
             const data =
                 await footballAPI(
-                    "/transfers",
+                    "/standings",
                     {
-                        team:
-                            team.team.id
+                        league,
+                        season
                     }
                 );
 
-            let transfers =
-                data.response || [];
-
-            /*
-               API-Football transfer yapısı:
-
-               {
-                   player: {...},
-                   update: "...",
-                   transfers: [
-                       {
-                           date,
-                           type,
-                           teams: {
-                               in,
-                               out
-                           }
-                       }
-                   ]
-               }
-            */
-
-            transfers.sort(
-                (a, b) => {
-
-                    const aDate =
-                        new Date(
-                            a.transfers?.[0]?.date ||
-                            0
-                        );
-
-                    const bDate =
-                        new Date(
-                            b.transfers?.[0]?.date ||
-                            0
-                        );
-
-                    return (
-                        bDate - aDate
-                    );
-                }
-            );
-
-            res.json({
-                ok: true,
-
-                team:
-                    team.team,
-
-                response:
-                    transfers
-            });
+            res.json(data);
 
         } catch (error) {
 
             console.error(
-                "TRANSFERS ERROR:",
-                error.message
+                "❌ STANDINGS:",
+                error
             );
 
             res.status(500).json({
-                ok: false,
+
+                success: false,
+
                 error:
-                    "TRANSFERS_API_ERROR",
-                details:
                     error.message
+
             });
 
         }
@@ -897,595 +907,618 @@ app.get(
     }
 );
 
-/* =========================================================
-   PUSH PUBLIC KEY
-========================================================= */
+// ======================================================
+// FIXTURE DETAIL
+// ======================================================
 
 app.get(
-    "/api/push/public-key",
-    (req, res) => {
-
-        res.json({
-            ok: true,
-            publicKey:
-                VAPID_PUBLIC_KEY
-        });
-
-    }
-);
-
-/* =========================================================
-   PUSH SUBSCRIBE
-========================================================= */
-
-app.post(
-    "/api/push/subscribe",
-    (req, res) => {
-
-        const {
-            subscription,
-            teams
-        } = req.body;
-
-        if (!subscription?.endpoint) {
-
-            return res.status(400).json({
-                ok: false,
-                error:
-                    "Push subscription gerekli."
-            });
-
-        }
-
-        const cleanTeams =
-            Array.isArray(teams)
-                ? teams
-                    .map(Number)
-                    .filter(
-                        Number.isInteger
-                    )
-                : [];
-
-        subscriptions.set(
-            subscription.endpoint,
-            {
-                subscription,
-                teams:
-                    cleanTeams
-            }
-        );
-
-        console.log(
-            "📱 PUSH KAYDEDİLDİ"
-        );
-
-        console.log(
-            "Takımlar:",
-            cleanTeams
-        );
-
-        res.json({
-            ok: true,
-            message:
-                "Push subscription kaydedildi.",
-            teams:
-                cleanTeams
-        });
-
-    }
-);
-
-/* =========================================================
-   UPDATE TEAMS
-========================================================= */
-
-app.post(
-    "/api/push/teams",
-    (req, res) => {
-
-        const {
-            endpoint,
-            teams
-        } = req.body;
-
-        if (!endpoint) {
-
-            return res.status(400).json({
-                ok: false,
-                error:
-                    "Endpoint gerekli."
-            });
-
-        }
-
-        const item =
-            subscriptions.get(
-                endpoint
-            );
-
-        if (!item) {
-
-            return res.status(404).json({
-                ok: false,
-                error:
-                    "Push subscription bulunamadı."
-            });
-
-        }
-
-        item.teams =
-            Array.isArray(teams)
-                ? teams
-                    .map(Number)
-                    .filter(
-                        Number.isInteger
-                    )
-                : [];
-
-        subscriptions.set(
-            endpoint,
-            item
-        );
-
-        console.log(
-            "🔄 TAKIMLAR GÜNCELLENDİ:",
-            item.teams
-        );
-
-        res.json({
-            ok: true,
-            teams:
-                item.teams
-        });
-
-    }
-);
-
-/* =========================================================
-   UNSUBSCRIBE
-========================================================= */
-
-app.post(
-    "/api/push/unsubscribe",
-    (req, res) => {
-
-        const {
-            endpoint
-        } = req.body;
-
-        if (endpoint) {
-
-            subscriptions.delete(
-                endpoint
-            );
-
-        }
-
-        res.json({
-            ok: true
-        });
-
-    }
-);
-
-/* =============================/* =========================================================
-   TEST PUSH NOTIFICATION
-========================================================= */
-// TEST PUSH ACTIVE
-app.get(
-    "/api/push/test",
+    "/api/fixture/:id",
     async (req, res) => {
-
-        let sent = 0;
-        let failed = 0;
-
-        for (
-            const item
-            of subscriptions.values()
-        ) {
-
-            try {
-
-                await webpush.sendNotification(
-                    item.subscription,
-                    JSON.stringify({
-
-                        title:
-                            "⚽ GOALHUB TEST",
-
-                        body:
-                            "Bildirim sistemi çalışıyor! 🔔",
-
-                        icon:
-                            "/icon-192.png",
-
-                        badge:
-                            "/icon-192.png",
-
-                        tag:
-                            "goalhub-test-" +
-                            Date.now(),
-
-                        renotify:
-                            true,
-
-                        data: {
-                            url: "/"
-                        }
-
-                    })
-                );
-
-                sent++;
-
-                console.log(
-                    "🔔 TEST BİLDİRİMİ GÖNDERİLDİ"
-                );
-
-            } catch (error) {
-
-                failed++;
-
-                console.error(
-                    "❌ TEST PUSH ERROR:",
-                    error.statusCode,
-                    error.message
-                );
-
-                if (
-                    error.statusCode === 404 ||
-                    error.statusCode === 410
-                ) {
-
-                    subscriptions.delete(
-                        item.subscription.endpoint
-                    );
-
-                }
-
-            }
-
-        }
-
-        res.json({
-
-            ok: true,
-
-            message:
-                "Test bildirimi gönderildi.",
-
-            sent,
-
-            failed,
-
-            subscriptions:
-                subscriptions.size
-
-        });
-
-    }
-);============================
-   SEND GOAL NOTIFICATION
-========================================================= */
-
-async function sendGoalNotification(
-    teamId,
-    teamName,
-    opponentName,
-    scoreHome,
-    scoreAway
-) {
-
-    if (!teamId) {
-        return;
-    }
-
-    const users =
-        [
-            ...subscriptions.values()
-        ]
-        .filter(item =>
-            item.teams.includes(
-                Number(teamId)
-            )
-        );
-
-    if (!users.length) {
-
-        console.log(
-            `🔕 ${teamName} için abone yok.`
-        );
-
-        return;
-    }
-
-    const title =
-        `⚽ ${teamName} GOL ATTI!`;
-
-    const body =
-        `${teamName} ${scoreHome} - ${scoreAway} ${opponentName}`;
-
-    const payload =
-        JSON.stringify({
-
-            title,
-
-            body,
-
-            icon:
-                "/icon-192.png",
-
-            badge:
-                "/icon-192.png",
-
-            tag:
-                `goal-${teamId}-${Date.now()}`,
-
-            renotify:
-                true,
-
-            data: {
-                teamId:
-                    Number(teamId),
-
-                url:
-                    "/"
-            }
-
-        });
-
-    for (
-        const item
-        of users
-    ) {
 
         try {
 
-            await webpush.sendNotification(
-                item.subscription,
-                payload
-            );
+            const data =
+                await footballAPI(
+                    "/fixtures",
+                    {
+                        id:
+                            req.params.id
+                    }
+                );
 
-            console.log(
-                `🔔 BİLDİRİM GÖNDERİLDİ: ${teamName}`
-            );
+            res.json(data);
 
         } catch (error) {
 
             console.error(
-                "PUSH ERROR:",
-                error.statusCode,
-                error.message
+                "❌ FIXTURE DETAIL:",
+                error
             );
 
-            if (
-                error.statusCode === 404 ||
-                error.statusCode === 410
-            ) {
+            res.status(500).json({
 
-                subscriptions.delete(
-                    item.subscription.endpoint
-                );
+                success: false,
 
-                console.log(
-                    "🗑️ Geçersiz abonelik silindi."
-                );
+                error:
+                    error.message
 
-            }
+            });
 
         }
 
     }
+);
 
-}
+// ======================================================
+// MATCH DETAIL ALIAS
+// ======================================================
+// Frontend /api/match/:id kullanıyorsa da çalışır.
+// ======================================================
 
-/* =========================================================
-   GOAL CHECKER
-========================================================= */
+app.get(
+    "/api/match/:id",
+    async (req, res) => {
 
-let goalCheckRunning = false;
+        try {
 
-async function checkGoals() {
-
-    if (goalCheckRunning) {
-        return;
-    }
-
-    goalCheckRunning = true;
-
-    try {
-
-        const data =
-            await footballAPI(
-                "/fixtures",
-                {
-                    live: "all"
-                }
-            );
-
-        const matches =
-            data.response || [];
-
-        for (
-            const match
-            of matches
-        ) {
-
-            const fixture =
-                match.fixture || {};
-
-            const teams =
-                match.teams || {};
-
-            const goals =
-                match.goals || {};
-
-            const fixtureId =
-                fixture.id;
-
-            if (!fixtureId) {
-                continue;
-            }
-
-            const home =
-                Number(
-                    goals.home ?? 0
-                );
-
-            const away =
-                Number(
-                    goals.away ?? 0
-                );
-
-            const previous =
-                knownGoals.get(
-                    fixtureId
-                );
-
-            /*
-               İlk kez gördüğümüz maçın
-               mevcut skorunu hafızaya alıyoruz.
-
-               Böylece eski gole bildirim gitmez.
-            */
-
-            if (!previous) {
-
-                knownGoals.set(
-                    fixtureId,
+            const data =
+                await footballAPI(
+                    "/fixtures",
                     {
-                        home,
-                        away
+                        id:
+                            req.params.id
                     }
                 );
 
-                continue;
-            }
+            res.json(data);
 
-            /*
-               Ev sahibi golü
-            */
+        } catch (error) {
 
-            if (
-                home >
-                previous.home
-            ) {
-
-                await sendGoalNotification(
-
-                    teams.home?.id,
-
-                    teams.home?.name ||
-                        "Ev sahibi",
-
-                    teams.away?.name ||
-                        "Rakip",
-
-                    home,
-
-                    away
-
-                );
-
-            }
-
-            /*
-               Deplasman golü
-            */
-
-            if (
-                away >
-                previous.away
-            ) {
-
-                await sendGoalNotification(
-
-                    teams.away?.id,
-
-                    teams.away?.name ||
-                        "Deplasman",
-
-                    teams.home?.name ||
-                        "Rakip",
-
-                    home,
-
-                    away
-
-                );
-
-            }
-
-            knownGoals.set(
-                fixtureId,
-                {
-                    home,
-                    away
-                }
+            console.error(
+                "❌ MATCH DETAIL:",
+                error
             );
+
+            res.status(500).json({
+
+                success: false,
+
+                error:
+                    error.message
+
+            });
 
         }
 
-        console.log(
-            `⚽ Gol kontrolü tamamlandı • ${matches.length} canlı maç`
-        );
-
-    } catch (error) {
-
-        console.error(
-            "❌ GOL KONTROLÜ:",
-            error.message
-        );
-
-    } finally {
-
-        goalCheckRunning =
-            false;
-
     }
-
-}
-
-/* =========================================================
-   AUTO GOAL CHECK
-========================================================= */
-
-setInterval(
-    checkGoals,
-    30000
 );
 
-checkGoals();
-
-/* =========================================================
-   SERVICE WORKER
-========================================================= */
+// ======================================================
+// FIXTURE EVENTS
+// ======================================================
 
 app.get(
-    "/service-worker.js",
-    (req, res) => {
+    "/api/fixture/:id/events",
+    async (req, res) => {
 
-        res.sendFile(
-            path.join(
-                __dirname,
-                "service-worker.js"
-            )
-        );
+        try {
+
+            const data =
+                await footballAPI(
+                    "/fixtures/events",
+                    {
+                        fixture:
+                            req.params.id
+                    }
+                );
+
+            res.json(data);
+
+        } catch (error) {
+
+            console.error(
+                "❌ EVENTS:",
+                error
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                error:
+                    error.message
+
+            });
+
+        }
 
     }
 );
 
-/* =========================================================
-   INDEX
-========================================================= */
+// ======================================================
+// FIXTURE STATISTICS
+// ======================================================
 
 app.get(
-    "/",
+    "/api/fixture/:id/statistics",
+    async (req, res) => {
+
+        try {
+
+            const data =
+                await footballAPI(
+                    "/fixtures/statistics",
+                    {
+                        fixture:
+                            req.params.id
+                    }
+                );
+
+            res.json(data);
+
+        } catch (error) {
+
+            console.error(
+                "❌ STATISTICS:",
+                error
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                error:
+                    error.message
+
+            });
+
+        }
+
+    }
+);
+
+// ======================================================
+// FIXTURE LINEUPS
+// ======================================================
+
+app.get(
+    "/api/fixture/:id/lineups",
+    async (req, res) => {
+
+        try {
+
+            const data =
+                await footballAPI(
+                    "/fixtures/lineups",
+                    {
+                        fixture:
+                            req.params.id
+                    }
+                );
+
+            res.json(data);
+
+        } catch (error) {
+
+            console.error(
+                "❌ LINEUPS:",
+                error
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                error:
+                    error.message
+
+            });
+
+        }
+
+    }
+);
+
+// ======================================================
+// FIXTURE HEAD TO HEAD
+// ======================================================
+
+app.get(
+    "/api/h2h",
+    async (req, res) => {
+
+        try {
+
+            const h2h =
+                req.query.h2h;
+
+            if (!h2h) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    error:
+                        "h2h parametresi gerekli."
+
+                });
+
+            }
+
+            const data =
+                await footballAPI(
+                    "/fixtures/headtohead",
+                    {
+                        h2h
+                    }
+                );
+
+            res.json(data);
+
+        } catch (error) {
+
+            console.error(
+                "❌ H2H:",
+                error
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                error:
+                    error.message
+
+            });
+
+        }
+
+    }
+);
+
+// ======================================================
+// TEAM FIXTURES
+// ======================================================
+
+app.get(
+    "/api/team/:id/fixtures",
+    async (req, res) => {
+
+        try {
+
+            const team =
+                req.params.id;
+
+            const season =
+                req.query.season ||
+                2026;
+
+            const last =
+                req.query.last;
+
+            const next =
+                req.query.next;
+
+            const params = {
+
+                team,
+                season
+
+            };
+
+            if (last) {
+
+                params.last =
+                    last;
+
+            }
+
+            if (next) {
+
+                params.next =
+                    next;
+
+            }
+
+            const data =
+                await footballAPI(
+                    "/fixtures",
+                    params
+                );
+
+            res.json(data);
+
+        } catch (error) {
+
+            console.error(
+                "❌ TEAM FIXTURES:",
+                error
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                error:
+                    error.message
+
+            });
+
+        }
+
+    }
+);
+
+// ======================================================
+// TEAM STANDINGS
+// ======================================================
+
+app.get(
+    "/api/team/:id/standings",
+    async (req, res) => {
+
+        try {
+
+            const team =
+                req.params.id;
+
+            const league =
+                req.query.league;
+
+            const season =
+                req.query.season ||
+                2026;
+
+            if (!league) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    error:
+                        "league parametresi gerekli."
+
+                });
+
+            }
+
+            const data =
+                await footballAPI(
+                    "/standings",
+                    {
+                        league,
+                        season,
+                        team
+                    }
+                );
+
+            res.json(data);
+
+        } catch (error) {
+
+            console.error(
+                "❌ TEAM STANDINGS:",
+                error
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                error:
+                    error.message
+
+            });
+
+        }
+
+    }
+);
+
+// ======================================================
+// COUNTRIES
+// ======================================================
+
+app.get(
+    "/api/countries",
+    async (req, res) => {
+
+        try {
+
+            const data =
+                await footballAPI(
+                    "/countries"
+                );
+
+            res.json(data);
+
+        } catch (error) {
+
+            console.error(
+                "❌ COUNTRIES:",
+                error
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                error:
+                    error.message
+
+            });
+
+        }
+
+    }
+);
+
+// ======================================================
+// TOP SCORERS
+// ======================================================
+
+app.get(
+    "/api/topscorers",
+    async (req, res) => {
+
+        try {
+
+            const league =
+                req.query.league;
+
+            const season =
+                req.query.season ||
+                2026;
+
+            if (!league) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    error:
+                        "league parametresi gerekli."
+
+                });
+
+            }
+
+            const data =
+                await footballAPI(
+                    "/players/topscorers",
+                    {
+                        league,
+                        season
+                    }
+                );
+
+            res.json(data);
+
+        } catch (error) {
+
+            console.error(
+                "❌ TOP SCORERS:",
+                error
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                error:
+                    error.message
+
+            });
+
+        }
+
+    }
+);
+
+// ======================================================
+// TOP ASSISTS
+// ======================================================
+
+app.get(
+    "/api/topassists",
+    async (req, res) => {
+
+        try {
+
+            const league =
+                req.query.league;
+
+            const season =
+                req.query.season ||
+                2026;
+
+            if (!league) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    error:
+                        "league parametresi gerekli."
+
+                });
+
+            }
+
+            const data =
+                await footballAPI(
+                    "/players/topassists",
+                    {
+                        league,
+                        season
+                    }
+                );
+
+            res.json(data);
+
+        } catch (error) {
+
+            console.error(
+                "❌ TOP ASSISTS:",
+                error
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                error:
+                    error.message
+
+            });
+
+        }
+
+    }
+);
+
+// ======================================================
+// API 404
+// ======================================================
+
+app.use(
+    "/api",
     (req, res) => {
+
+        res.status(404).json({
+
+            success: false,
+
+            error:
+                "GOALHUB API endpoint bulunamadı.",
+
+            endpoint:
+                req.originalUrl
+
+        });
+
+    }
+);
+
+// ======================================================
+// FRONTEND FALLBACK
+// ======================================================
+
+app.use(
+    (req, res, next) => {
+
+        if (
+            req.path.startsWith("/api/")
+        ) {
+
+            return next();
+
+        }
 
         res.sendFile(
             path.join(
                 __dirname,
+                "public",
                 "index.html"
             )
         );
@@ -1493,108 +1526,104 @@ app.get(
     }
 );
 
-/* =========================================================
-   404
-========================================================= */
+// ======================================================
+// SERVER START
+// ======================================================
 
-app.use(
-    (req, res) => {
-
-        res.status(404).json({
-            ok: false,
-            error:
-                "Endpoint not found"
-        });
-
-    }
-);
-
-/* =========================================================
-   SERVER
-========================================================= */
-app.get("/api/push/test", async (req, res) => {
-    let sent = 0;
-
-    for (const item of subscriptions.values()) {
-        try {
-            await webpush.sendNotification(
-                item.subscription,
-                JSON.stringify({
-                    title: "⚽ GOALHUB TEST",
-                    body: "Bildirim sistemi çalışıyor! 🔔",
-                    icon: "/icon-192.png",
-                    badge: "/icon-192.png",
-                    tag: "goalhub-test",
-                    data: {
-                        url: "/"
-                    }
-                })
-            );
-
-            sent++;
-
-        } catch (error) {
-            console.error(
-                "TEST PUSH ERROR:",
-                error.statusCode,
-                error.message
-            );
-
-            if (
-                error.statusCode === 404 ||
-                error.statusCode === 410
-            ) {
-                subscriptions.delete(
-                    item.subscription.endpoint
-                );
-            }
-        }
-    }
-
-    res.json({
-        ok: true,
-        message: "Test bildirimi gönderildi.",
-        sent
-    });
-});
 app.listen(
     PORT,
     () => {
 
         console.log("");
+
         console.log(
             "================================"
         );
+
         console.log(
-            "          GOALHUB"
+            "       GOALHUB PRO AKTİF"
         );
+
         console.log(
             "================================"
         );
-        console.log("");
-
-        console.log(
-            `Server: http://localhost:${PORT}`
-        );
-
-        console.log(
-            `Health: http://localhost:${PORT}/api/health`
-        );
 
         console.log("");
 
         console.log(
-            "⚽ Gerçek gol kontrolü: 30 saniye"
-        );
-
-        console.log(
-            "🔔 Web Push: AKTİF"
+            `🌐 http://localhost:${PORT}`
         );
 
         console.log("");
 
         console.log(
-            "GOALHUB SERVER READY"
+            "✓ API KEY OK"
+        );
+
+        console.log(
+            "✓ LIVE"
+        );
+
+        console.log(
+            "✓ AUTO REFRESH FRONTEND READY"
+        );
+
+        console.log(
+            "✓ GOALS / CARDS / SUBSTITUTIONS"
+        );
+
+        console.log(
+            "✓ FIXTURES"
+        );
+
+        console.log(
+            "✓ LEAGUES"
+        );
+
+        console.log(
+            "✓ TEAMS"
+        );
+
+        console.log(
+            "✓ PLAYERS"
+        );
+
+        console.log(
+            "✓ TRANSFERS"
+        );
+
+        console.log(
+            "✓ STANDINGS"
+        );
+
+        console.log(
+            "✓ TOP SCORERS"
+        );
+
+        console.log(
+            "✓ TOP ASSISTS"
+        );
+
+        console.log(
+            "✓ MATCH DETAILS"
+        );
+
+        console.log(
+            "✓ MATCH STATISTICS"
+        );
+
+        console.log(
+            "✓ LINEUPS"
+        );
+
+        console.log(
+            "✓ H2H"
+        );
+
+        console.log("");
+
+        console.log(
+            "================================"
         );
 
         console.log("");
