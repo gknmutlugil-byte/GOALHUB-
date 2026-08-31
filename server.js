@@ -5,6 +5,7 @@ require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
 const API_BASE = "https://v3.football.api-sports.io";
 const API_KEY = process.env.API_KEY;
 
@@ -65,56 +66,98 @@ async function footballAPI(endpoint, params = {}) {
         )
     );
 
-    const response = await fetch(
-        url,
-        {
-            method: "GET",
-            headers: {
-                "x-apisports-key": API_KEY
-            }
-        }
-    );
+    const controller =
+        new AbortController();
 
-    const text =
-        await response.text();
-
-    let data;
+    const timeout =
+        setTimeout(
+            () => controller.abort(),
+            15000
+        );
 
     try {
 
-        data = JSON.parse(text);
+        const response =
+            await fetch(
+                url,
+                {
+                    method: "GET",
 
-    } catch {
+                    headers: {
+                        "x-apisports-key":
+                            API_KEY,
 
-        throw new Error(
-            "API geçersiz JSON döndürdü: " +
-            text.substring(0, 500)
-        );
+                        "Accept":
+                            "application/json"
+                    },
+
+                    signal:
+                        controller.signal
+                }
+            );
+
+        const text =
+            await response.text();
+
+        let data;
+
+        try {
+
+            data =
+                JSON.parse(text);
+
+        } catch {
+
+            throw new Error(
+                "API geçersiz JSON döndürdü: " +
+                text.substring(0, 500)
+            );
+
+        }
+
+        if (!response.ok) {
+
+            throw new Error(
+                `API HTTP ${response.status}`
+            );
+
+        }
+
+        if (
+            data.errors &&
+            Object.keys(data.errors).length > 0
+        ) {
+
+            throw new Error(
+                JSON.stringify(
+                    data.errors
+                )
+            );
+
+        }
+
+        return data;
+
+    } catch (error) {
+
+        if (
+            error.name ===
+            "AbortError"
+        ) {
+
+            throw new Error(
+                "API isteği zaman aşımına uğradı."
+            );
+
+        }
+
+        throw error;
+
+    } finally {
+
+        clearTimeout(timeout);
 
     }
-
-    if (!response.ok) {
-
-        throw new Error(
-            `API HTTP ${response.status}`
-        );
-
-    }
-
-    if (
-        data.errors &&
-        Object.keys(data.errors).length > 0
-    ) {
-
-        throw new Error(
-            JSON.stringify(
-                data.errors
-            )
-        );
-
-    }
-
-    return data;
 }
 
 // ======================================================
@@ -147,7 +190,7 @@ app.get(
 
             console.error(
                 "❌ TEST:",
-                error
+                error.message
             );
 
             res.status(500).json({
@@ -182,6 +225,11 @@ app.get(
             res.json(data);
 
         } catch (error) {
+
+            console.error(
+                "❌ STATUS:",
+                error.message
+            );
 
             res.status(500).json({
 
@@ -221,7 +269,7 @@ app.get(
 
             console.error(
                 "❌ LIVE:",
-                error
+                error.message
             );
 
             res.status(500).json({
@@ -297,7 +345,7 @@ app.get(
 
             console.error(
                 "❌ FIXTURES:",
-                error
+                error.message
             );
 
             res.status(500).json({
@@ -357,7 +405,7 @@ app.get(
 
             console.error(
                 "❌ LEAGUES:",
-                error
+                error.message
             );
 
             res.status(500).json({
@@ -417,7 +465,7 @@ app.get(
 
             console.error(
                 "❌ TEAMS:",
-                error
+                error.message
             );
 
             res.status(500).json({
@@ -459,7 +507,7 @@ app.get(
 
             console.error(
                 "❌ TEAM DETAIL:",
-                error
+                error.message
             );
 
             res.status(500).json({
@@ -501,7 +549,7 @@ app.get(
 
             console.error(
                 "❌ SQUAD:",
-                error
+                error.message
             );
 
             res.status(500).json({
@@ -544,7 +592,11 @@ app.get(
                 req.query.season ||
                 2026;
 
-            if (!search && !team && !league) {
+            if (
+                !search &&
+                !team &&
+                !league
+            ) {
 
                 return res.status(400).json({
 
@@ -614,13 +666,13 @@ app.get(
 
             const leagues = [
 
-                39,
-                140,
-                135,
-                78,
-                61,
-                203,
-                2
+                39,   // Premier League
+                140,  // La Liga
+                135,  // Serie A
+                78,   // Bundesliga
+                61,   // Ligue 1
+                203,  // Süper Lig
+                2     // Champions League
 
             ];
 
@@ -659,13 +711,13 @@ app.get(
 
                     }
 
-                } catch (e) {
+                } catch (error) {
 
                     console.log(
                         "⚠️ Lig",
                         leagueId,
                         "atlanıyor:",
-                        e.message
+                        error.message
                     );
 
                 }
@@ -736,7 +788,7 @@ app.get(
 
             console.error(
                 "❌ PLAYER SEARCH:",
-                error
+                error.message
             );
 
             res.status(500).json({
@@ -785,7 +837,7 @@ app.get(
 
             console.error(
                 "❌ PLAYER DETAIL:",
-                error
+                error.message
             );
 
             res.status(500).json({
@@ -827,7 +879,7 @@ app.get(
 
             console.error(
                 "❌ TRANSFERS:",
-                error
+                error.message
             );
 
             res.status(500).json({
@@ -889,7 +941,7 @@ app.get(
 
             console.error(
                 "❌ STANDINGS:",
-                error
+                error.message
             );
 
             res.status(500).json({
@@ -931,7 +983,7 @@ app.get(
 
             console.error(
                 "❌ FIXTURE DETAIL:",
-                error
+                error.message
             );
 
             res.status(500).json({
@@ -950,8 +1002,6 @@ app.get(
 
 // ======================================================
 // MATCH DETAIL ALIAS
-// ======================================================
-// Frontend /api/match/:id kullanıyorsa da çalışır.
 // ======================================================
 
 app.get(
@@ -975,7 +1025,7 @@ app.get(
 
             console.error(
                 "❌ MATCH DETAIL:",
-                error
+                error.message
             );
 
             res.status(500).json({
@@ -1017,7 +1067,7 @@ app.get(
 
             console.error(
                 "❌ EVENTS:",
-                error
+                error.message
             );
 
             res.status(500).json({
@@ -1059,7 +1109,7 @@ app.get(
 
             console.error(
                 "❌ STATISTICS:",
-                error
+                error.message
             );
 
             res.status(500).json({
@@ -1101,7 +1151,7 @@ app.get(
 
             console.error(
                 "❌ LINEUPS:",
-                error
+                error.message
             );
 
             res.status(500).json({
@@ -1119,7 +1169,7 @@ app.get(
 );
 
 // ======================================================
-// FIXTURE HEAD TO HEAD
+// FIXTURE H2H
 // ======================================================
 
 app.get(
@@ -1158,7 +1208,7 @@ app.get(
 
             console.error(
                 "❌ H2H:",
-                error
+                error.message
             );
 
             res.status(500).json({
@@ -1231,7 +1281,7 @@ app.get(
 
             console.error(
                 "❌ TEAM FIXTURES:",
-                error
+                error.message
             );
 
             res.status(500).json({
@@ -1297,7 +1347,7 @@ app.get(
 
             console.error(
                 "❌ TEAM STANDINGS:",
-                error
+                error.message
             );
 
             res.status(500).json({
@@ -1335,7 +1385,7 @@ app.get(
 
             console.error(
                 "❌ COUNTRIES:",
-                error
+                error.message
             );
 
             res.status(500).json({
@@ -1397,7 +1447,7 @@ app.get(
 
             console.error(
                 "❌ TOP SCORERS:",
-                error
+                error.message
             );
 
             res.status(500).json({
@@ -1459,7 +1509,7 @@ app.get(
 
             console.error(
                 "❌ TOP ASSISTS:",
-                error
+                error.message
             );
 
             res.status(500).json({
