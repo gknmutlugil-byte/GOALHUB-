@@ -1416,7 +1416,51 @@ app.use(
 /* =========================================================
    SERVER
 ========================================================= */
+app.get("/api/push/test", async (req, res) => {
+    let sent = 0;
 
+    for (const item of subscriptions.values()) {
+        try {
+            await webpush.sendNotification(
+                item.subscription,
+                JSON.stringify({
+                    title: "⚽ GOALHUB TEST",
+                    body: "Bildirim sistemi çalışıyor! 🔔",
+                    icon: "/icon-192.png",
+                    badge: "/icon-192.png",
+                    tag: "goalhub-test",
+                    data: {
+                        url: "/"
+                    }
+                })
+            );
+
+            sent++;
+
+        } catch (error) {
+            console.error(
+                "TEST PUSH ERROR:",
+                error.statusCode,
+                error.message
+            );
+
+            if (
+                error.statusCode === 404 ||
+                error.statusCode === 410
+            ) {
+                subscriptions.delete(
+                    item.subscription.endpoint
+                );
+            }
+        }
+    }
+
+    res.json({
+        ok: true,
+        message: "Test bildirimi gönderildi.",
+        sent
+    });
+});
 app.listen(
     PORT,
     () => {
