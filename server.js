@@ -5,7 +5,7 @@ const path = require("path");
 const webpush = require("web-push");
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;;
 
 const API_KEY = process.env.API_FOOTBALL_KEY;
 
