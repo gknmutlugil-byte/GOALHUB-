@@ -6,792 +6,182 @@
 <title>GOALHUB PRO</title>
 
 <style>
-*{
-    box-sizing:border-box;
-    margin:0;
-    padding:0;
-}
-
+*{box-sizing:border-box;margin:0;padding:0}
 :root{
-    --bg:#070b12;
-    --panel:#0d131d;
-    --panel2:#111a26;
-    --border:#1d2a3a;
-    --text:#f4f7fb;
-    --muted:#8b9aab;
-    --green:#20d47a;
-    --red:#ff465c;
-    --yellow:#ffc400;
-    --blue:#3d8bfd;
-    --orange:#ff8a00;
+ --bg:#070b12;--panel:#0d131d;--panel2:#111a26;--border:#1d2a3a;
+ --text:#f4f7fb;--muted:#8b9aab;--green:#20d47a;--red:#ff465c;
+ --yellow:#ffc400;--blue:#3d8bfd;--orange:#ff8a00
 }
-
-body{
-    font-family:Arial,Helvetica,sans-serif;
-    background:var(--bg);
-    color:var(--text);
-    min-height:100vh;
-}
-
-button,
-input,
-select{
-    font:inherit;
-}
-
-button{
-    cursor:pointer;
-}
-
-.hidden{
-    display:none!important;
-}
-
-/* ==============================
-   HEADER
-============================== */
+body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
 
 header{
-    position:sticky;
-    top:0;
-    z-index:1000;
-    height:70px;
-    background:#080d15ee;
-    backdrop-filter:blur(15px);
-    border-bottom:1px solid var(--border);
-    display:flex;
-    align-items:center;
-    padding:0 24px;
-    gap:24px;
+ position:sticky;top:0;z-index:1000;height:70px;background:#080d15ee;
+ backdrop-filter:blur(15px);border-bottom:1px solid var(--border);
+ display:flex;align-items:center;padding:0 24px;gap:24px
 }
-
-.logo{
-    font-size:23px;
-    font-weight:900;
-    letter-spacing:-1px;
-    white-space:nowrap;
-}
-
-.logo span{
-    color:var(--green);
-}
-
-.nav{
-    display:flex;
-    gap:6px;
-    overflow-x:auto;
-}
-
-.nav button{
-    border:0;
-    background:transparent;
-    color:var(--muted);
-    padding:10px 13px;
-    border-radius:8px;
-    white-space:nowrap;
-}
-
-.nav button:hover,
-.nav button.active{
-    background:var(--panel2);
-    color:white;
-}
-
-.header-search{
-    margin-left:auto;
-    width:250px;
-}
-
+.logo{font-size:23px;font-weight:900;letter-spacing:-1px;white-space:nowrap}
+.logo span{color:var(--green)}
+.nav{display:flex;gap:6px;overflow-x:auto}
+.nav button{border:0;background:transparent;color:var(--muted);padding:10px 13px;border-radius:8px;white-space:nowrap}
+.nav button:hover,.nav button.active{background:var(--panel2);color:white}
+.header-search{margin-left:auto;width:250px}
 .header-search input{
-    width:100%;
-    background:var(--panel);
-    border:1px solid var(--border);
-    color:white;
-    padding:11px 14px;
-    border-radius:10px;
-    outline:none;
+ width:100%;background:var(--panel);border:1px solid var(--border);color:white;
+ padding:11px 14px;border-radius:10px;outline:none
 }
+.header-search input:focus{border-color:var(--green)}
 
-.header-search input:focus{
-    border-color:var(--green);
-}
-
-/* ==============================
-   LAYOUT
-============================== */
-
-.app{
-    max-width:1500px;
-    margin:auto;
-    padding:24px;
-}
-
-.page{
-    display:none;
-}
-
-.page.active{
-    display:block;
-}
-
-.page-title{
-    font-size:28px;
-    font-weight:900;
-    margin-bottom:7px;
-}
-
-.page-subtitle{
-    color:var(--muted);
-    margin-bottom:22px;
-}
-
-.grid{
-    display:grid;
-    gap:16px;
-}
-
-.grid-2{
-    grid-template-columns:repeat(2,minmax(0,1fr));
-}
-
-.grid-3{
-    grid-template-columns:repeat(3,minmax(0,1fr));
-}
-
-.grid-4{
-    grid-template-columns:repeat(4,minmax(0,1fr));
-}
-
+.app{max-width:1500px;margin:auto;padding:24px}
+.page{display:none}.page.active{display:block}
+.page-title{font-size:28px;font-weight:900;margin-bottom:7px}
+.page-subtitle{color:var(--muted);margin-bottom:22px}
+.grid{display:grid;gap:16px}
+.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
 .panel{
-    background:linear-gradient(145deg,var(--panel),#0a1019);
-    border:1px solid var(--border);
-    border-radius:14px;
-    overflow:hidden;
+ background:linear-gradient(145deg,var(--panel),#0a1019);
+ border:1px solid var(--border);border-radius:14px;overflow:hidden
 }
-
 .panel-head{
-    padding:15px 17px;
-    border-bottom:1px solid var(--border);
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
+ padding:15px 17px;border-bottom:1px solid var(--border);
+ display:flex;align-items:center;justify-content:space-between;gap:10px
 }
+.panel-head h3{font-size:15px}
+.panel-body{padding:16px}
 
-.panel-head h3{
-    font-size:15px;
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+.input,.select{
+ background:var(--panel);border:1px solid var(--border);color:white;
+ border-radius:9px;padding:11px 13px;outline:none
 }
-
-.panel-body{
-    padding:16px;
-}
-
-/* ==============================
-   TOOLBAR
-============================== */
-
-.toolbar{
-    display:flex;
-    flex-wrap:wrap;
-    gap:10px;
-    margin-bottom:18px;
-}
-
-.input,
-.select{
-    background:var(--panel);
-    border:1px solid var(--border);
-    color:white;
-    border-radius:9px;
-    padding:11px 13px;
-    outline:none;
-}
-
-.input:focus,
-.select:focus{
-    border-color:var(--green);
-}
-
-.btn{
-    border:0;
-    background:var(--panel2);
-    color:white;
-    border-radius:9px;
-    padding:10px 14px;
-    font-weight:700;
-}
-
-.btn:hover{
-    filter:brightness(1.15);
-}
-
-.btn-green{
-    background:var(--green);
-    color:#001b0d;
-}
-
-.btn-blue{
-    background:var(--blue);
-}
-
-.btn-red{
-    background:var(--red);
-}
-
-.btn-yellow{
-    background:var(--yellow);
-    color:#111;
-}
-
-/* ==============================
-   LIVE
-============================== */
+.input:focus,.select:focus{border-color:var(--green)}
+.btn{border:0;background:var(--panel2);color:white;border-radius:9px;padding:10px 14px;font-weight:700}
+.btn:hover{filter:brightness(1.15)}
+.btn-green{background:var(--green);color:#001b0d}
+.btn-blue{background:var(--blue)}
+.btn-red{background:var(--red)}
+.btn-yellow{background:var(--yellow);color:#111}
 
 .live-badge{
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-    background:#182218;
-    color:var(--green);
-    padding:5px 9px;
-    border-radius:20px;
-    font-size:11px;
-    font-weight:900;
+ display:inline-flex;align-items:center;gap:6px;background:#182218;color:var(--green);
+ padding:5px 9px;border-radius:20px;font-size:11px;font-weight:900
 }
-
 .live-dot{
-    width:7px;
-    height:7px;
-    border-radius:50%;
-    background:var(--green);
-    box-shadow:0 0 10px var(--green);
-    animation:pulse 1.2s infinite;
+ width:7px;height:7px;border-radius:50%;background:var(--green);
+ box-shadow:0 0 10px var(--green);animation:pulse 1.2s infinite
 }
+@keyframes pulse{50%{opacity:.25}}
 
-@keyframes pulse{
-    50%{
-        opacity:.25;
-    }
-}
-
-.match{
-    padding:15px;
-    border-bottom:1px solid var(--border);
-    transition:.15s;
-}
-
-.match:last-child{
-    border-bottom:0;
-}
-
-.match:hover{
-    background:#111a26;
-}
-
-.match-top{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    color:var(--muted);
-    font-size:11px;
-    margin-bottom:12px;
-}
-
-.match-main{
-    display:grid;
-    grid-template-columns:1fr 90px 1fr;
-    align-items:center;
-    gap:10px;
-}
-
-.team{
-    display:flex;
-    align-items:center;
-    gap:9px;
-    font-weight:700;
-}
-
-.team.away{
-    justify-content:flex-end;
-    text-align:right;
-}
-
-.team-logo{
-    width:34px;
-    height:34px;
-    object-fit:contain;
-    border-radius:50%;
-    background:#172130;
-}
-
-.score{
-    text-align:center;
-    font-size:23px;
-    font-weight:900;
-}
-
-.score.live{
-    color:var(--green);
-}
-
-.match-bottom{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-top:11px;
-}
-
-.status{
-    color:var(--muted);
-    font-size:11px;
-}
-
-.detail-btn{
-    border:1px solid var(--border);
-    background:transparent;
-    color:white;
-    border-radius:7px;
-    padding:6px 9px;
-    font-size:11px;
-}
-
-.detail-btn:hover{
-    border-color:var(--green);
-    color:var(--green);
-}
-
-/* ==============================
-   EVENT POPUP
-============================== */
+.match{padding:15px;border-bottom:1px solid var(--border);transition:.15s}
+.match:last-child{border-bottom:0}
+.match:hover{background:#111a26}
+.match-top{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:11px;margin-bottom:12px}
+.match-main{display:grid;grid-template-columns:1fr 90px 1fr;align-items:center;gap:10px}
+.team{display:flex;align-items:center;gap:9px;font-weight:700}
+.team.away{justify-content:flex-end;text-align:right}
+.team-logo{width:34px;height:34px;object-fit:contain;border-radius:50%;background:#172130}
+.score{text-align:center;font-size:23px;font-weight:900}
+.score.live{color:var(--green)}
+.match-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:11px}
+.status{color:var(--muted);font-size:11px}
+.detail-btn{border:1px solid var(--border);background:transparent;color:white;border-radius:7px;padding:6px 9px;font-size:11px}
+.detail-btn:hover{border-color:var(--green);color:var(--green)}
 
 .goal-toast{
-    position:fixed;
-    right:20px;
-    bottom:20px;
-    z-index:3000;
-    width:340px;
-    background:#101b15;
-    border:1px solid var(--green);
-    box-shadow:0 15px 45px #0008;
-    border-radius:14px;
-    padding:17px;
-    transform:translateY(150px);
-    opacity:0;
-    pointer-events:none;
-    transition:.35s;
+ position:fixed;right:20px;bottom:20px;z-index:3000;width:340px;background:#101b15;
+ border:1px solid var(--green);box-shadow:0 15px 45px #0008;border-radius:14px;
+ padding:17px;transform:translateY(150px);opacity:0;pointer-events:none;transition:.35s
 }
+.goal-toast.show{transform:translateY(0);opacity:1}
+.goal-toast-title{color:var(--green);font-size:12px;font-weight:900;margin-bottom:7px}
+.goal-toast-text{font-size:17px;font-weight:900}
+.goal-toast-sub{color:var(--muted);margin-top:5px;font-size:12px}
 
-.goal-toast.show{
-    transform:translateY(0);
-    opacity:1;
-}
+.stat-card{padding:18px;background:var(--panel);border:1px solid var(--border);border-radius:14px}
+.stat-label{color:var(--muted);font-size:12px}
+.stat-value{font-size:25px;font-weight:900;margin-top:8px}
 
-.goal-toast-title{
-    color:var(--green);
-    font-size:12px;
-    font-weight:900;
-    margin-bottom:7px;
-}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th,td{padding:12px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+th{color:var(--muted);font-size:11px;text-transform:uppercase}
+td{font-size:13px}
+.rank{width:35px;color:var(--muted)}
+.club-cell{display:flex;align-items:center;gap:9px}
+.club-cell img{width:28px;height:28px;object-fit:contain}
 
-.goal-toast-text{
-    font-size:17px;
-    font-weight:900;
-}
+.profile{display:flex;align-items:center;gap:20px;padding:22px}
+.profile-logo{width:90px;height:90px;object-fit:contain;background:#172130;border-radius:14px;padding:8px}
+.profile h2{font-size:26px;margin-bottom:5px}
+.profile p{color:var(--muted);font-size:13px}
 
-.goal-toast-sub{
-    color:var(--muted);
-    margin-top:5px;
-    font-size:12px;
-}
+.detail-score{padding:28px;text-align:center}
+.detail-teams{display:grid;grid-template-columns:1fr 160px 1fr;align-items:center;gap:20px}
+.detail-team{display:flex;flex-direction:column;align-items:center;gap:10px;font-size:18px;font-weight:900}
+.detail-team img{width:80px;height:80px;object-fit:contain}
+.big-score{font-size:42px;font-weight:900}
+.detail-status{color:var(--green);font-weight:900;margin-top:8px}
+.events{padding:15px}
+.event{display:grid;grid-template-columns:55px 1fr 55px;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.event-time{color:var(--muted);font-weight:900}
+.event-center{text-align:center}
+.event-left{text-align:right}
+.event-icon{font-size:18px}
+.stat-row{display:grid;grid-template-columns:1fr 110px 1fr;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.stat-row .home{text-align:right;font-weight:800}
+.stat-row .away{font-weight:800}
+.stat-name{text-align:center;color:var(--muted);font-size:11px}
 
-/* ==============================
-   CARDS
-============================== */
-
-.stat-card{
-    padding:18px;
-    background:var(--panel);
-    border:1px solid var(--border);
-    border-radius:14px;
-}
-
-.stat-label{
-    color:var(--muted);
-    font-size:12px;
-}
-
-.stat-value{
-    font-size:25px;
-    font-weight:900;
-    margin-top:8px;
-}
-
-/* ==============================
-   TABLE
-============================== */
-
-.table-wrap{
-    overflow-x:auto;
-}
-
-table{
-    width:100%;
-    border-collapse:collapse;
-}
-
-th,
-td{
-    padding:12px 10px;
-    text-align:left;
-    border-bottom:1px solid var(--border);
-    white-space:nowrap;
-}
-
-th{
-    color:var(--muted);
-    font-size:11px;
-    text-transform:uppercase;
-}
-
-td{
-    font-size:13px;
-}
-
-.rank{
-    width:35px;
-    color:var(--muted);
-}
-
-.club-cell{
-    display:flex;
-    align-items:center;
-    gap:9px;
-}
-
-.club-cell img{
-    width:28px;
-    height:28px;
-    object-fit:contain;
-}
-
-/* ==============================
-   PROFILE
-============================== */
-
-.profile{
-    display:flex;
-    align-items:center;
-    gap:20px;
-    padding:22px;
-}
-
-.profile-logo{
-    width:90px;
-    height:90px;
-    object-fit:contain;
-    background:#172130;
-    border-radius:14px;
-    padding:8px;
-}
-
-.profile h2{
-    font-size:26px;
-    margin-bottom:5px;
-}
-
-.profile p{
-    color:var(--muted);
-    font-size:13px;
-}
-
-/* ==============================
-   DETAIL
-============================== */
-
-.detail-score{
-    padding:28px;
-    text-align:center;
-}
-
-.detail-teams{
-    display:grid;
-    grid-template-columns:1fr 160px 1fr;
-    align-items:center;
-    gap:20px;
-}
-
-.detail-team{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:10px;
-    font-size:18px;
-    font-weight:900;
-}
-
-.detail-team img{
-    width:80px;
-    height:80px;
-    object-fit:contain;
-}
-
-.big-score{
-    font-size:42px;
-    font-weight:900;
-}
-
-.detail-status{
-    color:var(--green);
-    font-weight:900;
-    margin-top:8px;
-}
-
-.events{
-    padding:15px;
-}
-
-.event{
-    display:grid;
-    grid-template-columns:55px 1fr 55px;
-    align-items:center;
-    gap:10px;
-    padding:10px 0;
-    border-bottom:1px solid var(--border);
-}
-
-.event-time{
-    color:var(--muted);
-    font-weight:900;
-}
-
-.event-center{
-    text-align:center;
-}
-
-.event-left{
-    text-align:right;
-}
-
-.event-icon{
-    font-size:18px;
-}
-
-.stat-row{
-    display:grid;
-    grid-template-columns:1fr 70px 1fr;
-    align-items:center;
-    gap:10px;
-    padding:10px 0;
-    border-bottom:1px solid var(--border);
-}
-
-.stat-row .home{
-    text-align:right;
-    font-weight:800;
-}
-
-.stat-row .away{
-    font-weight:800;
-}
-
-.stat-name{
-    text-align:center;
-    color:var(--muted);
-    font-size:11px;
-}
-
-/* ==============================
-   SEARCH
-============================== */
-
-.search-results{
-    display:grid;
-    gap:10px;
-}
-
+.search-results{display:grid;gap:10px}
 .search-result{
-    padding:14px;
-    border:1px solid var(--border);
-    border-radius:11px;
-    background:var(--panel);
-    display:flex;
-    align-items:center;
-    gap:13px;
-    cursor:pointer;
+ padding:14px;border:1px solid var(--border);border-radius:11px;background:var(--panel);
+ display:flex;align-items:center;gap:13px;cursor:pointer
 }
+.search-result:hover{border-color:var(--green)}
+.search-result img{width:45px;height:45px;object-fit:contain}
+.search-result-info{flex:1}
+.search-result-title{font-weight:900}
+.search-result-sub{color:var(--muted);font-size:12px;margin-top:4px}
 
-.search-result:hover{
-    border-color:var(--green);
-}
-
-.search-result img{
-    width:45px;
-    height:45px;
-    object-fit:contain;
-}
-
-.search-result-info{
-    flex:1;
-}
-
-.search-result-title{
-    font-weight:900;
-}
-
-.search-result-sub{
-    color:var(--muted);
-    font-size:12px;
-    margin-top:4px;
-}
-
-/* ==============================
-   LOADING
-============================== */
-
-.loading{
-    padding:40px;
-    text-align:center;
-    color:var(--muted);
-}
-
+.loading{padding:40px;text-align:center;color:var(--muted)}
 .spinner{
-    width:25px;
-    height:25px;
-    border:3px solid #253244;
-    border-top-color:var(--green);
-    border-radius:50%;
-    margin:0 auto 12px;
-    animation:spin .7s linear infinite;
+ width:25px;height:25px;border:3px solid #253244;border-top-color:var(--green);
+ border-radius:50%;margin:0 auto 12px;animation:spin .7s linear infinite
 }
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{padding:35px;text-align:center;color:var(--muted)}
 
-@keyframes spin{
-    to{
-        transform:rotate(360deg);
-    }
-}
-
-.empty{
-    padding:35px;
-    text-align:center;
-    color:var(--muted);
-}
-
-/* ==============================
-   MOBILE
-============================== */
-
-.mobile-nav{
-    display:none;
-}
+.mobile-nav{display:none}
 
 @media(max-width:900px){
-
-    header{
-        height:auto;
-        min-height:62px;
-        padding:12px 14px;
-        flex-wrap:wrap;
-        gap:10px;
-    }
-
-    .header-search{
-        order:3;
-        width:100%;
-        margin:0;
-    }
-
-    .nav{
-        width:100%;
-        order:2;
-    }
-
-    .app{
-        padding:15px;
-        padding-bottom:80px;
-    }
-
-    .grid-2,
-    .grid-3,
-    .grid-4{
-        grid-template-columns:1fr;
-    }
-
-    .detail-teams{
-        grid-template-columns:1fr 100px 1fr;
-    }
-
-    .detail-team img{
-        width:55px;
-        height:55px;
-    }
-
-    .big-score{
-        font-size:31px;
-    }
-
-    .team{
-        font-size:12px;
-    }
-
-    .team-logo{
-        width:28px;
-        height:28px;
-    }
-
-    .goal-toast{
-        left:12px;
-        right:12px;
-        width:auto;
-        bottom:75px;
-    }
+ header{height:auto;min-height:62px;padding:12px 14px;flex-wrap:wrap;gap:10px}
+ .header-search{order:3;width:100%;margin:0}
+ .nav{width:100%;order:2}
+ .app{padding:15px;padding-bottom:80px}
+ .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
+ .detail-teams{grid-template-columns:1fr 100px 1fr}
+ .detail-team img{width:55px;height:55px}
+ .big-score{font-size:31px}
+ .team{font-size:12px}
+ .team-logo{width:28px;height:28px}
+ .goal-toast{left:12px;right:12px;width:auto;bottom:75px}
 }
-
-/* ==============================
-   MOBILE BOTTOM NAV
-============================== */
-
 @media(max-width:650px){
-
-    .nav{
-        display:none;
-    }
-
-    .mobile-nav{
-        position:fixed;
-        bottom:0;
-        left:0;
-        right:0;
-        z-index:2000;
-        display:grid;
-        grid-template-columns:repeat(4,1fr);
-        background:#080d15f5;
-        backdrop-filter:blur(15px);
-        border-top:1px solid var(--border);
-    }
-
-    .mobile-nav button{
-        border:0;
-        background:transparent;
-        color:var(--muted);
-        padding:11px 4px;
-        font-size:10px;
-    }
-
-    .mobile-nav button.active{
-        color:var(--green);
-    }
-
-    .page-title{
-        font-size:23px;
-    }
-
-    .match-main{
-        grid-template-columns:1fr 65px 1fr;
-    }
-
-    .score{
-        font-size:19px;
-    }
+ .nav{display:none}
+ .mobile-nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:2000;display:grid;
+  grid-template-columns:repeat(4,1fr);background:#080d15f5;
+  backdrop-filter:blur(15px);border-top:1px solid var(--border)
+ }
+ .mobile-nav button{border:0;background:transparent;color:var(--muted);padding:11px 4px;font-size:10px}
+ .mobile-nav button.active{color:var(--green)}
+ .page-title{font-size:23px}
+ .match-main{grid-template-columns:1fr 65px 1fr}
+ .score{font-size:19px}
 }
 </style>
 </head>
@@ -799,3214 +189,1527 @@ td{
 <body>
 
 <header>
+<div class="logo">⚽ GOAL<span>HUB</span> PRO</div>
 
-    <div class="logo">
-        ⚽ GOAL<span>HUB</span> PRO
-    </div>
+<nav class="nav">
+<button data-page="live" class="active">🔴 Canlı</button>
+<button data-page="fixtures">📅 Fikstür</button>
+<button data-page="leagues">🏆 Ligler</button>
+<button data-page="standings">📈 Puan Durumu</button>
+<button data-page="search">🔎 Ara</button>
+</nav>
 
-    <nav class="nav">
-        <button data-page="live" class="active">🔴 Canlı</button>
-        <button data-page="fixtures">📅 Fikstür</button>
-        <button data-page="leagues">🏆 Ligler</button>
-        <button data-page="standings">📈 Puan Durumu</button>
-        <button data-page="search">🔎 Ara</button>
-    </nav>
-
-    <div class="header-search">
-        <input
-            id="globalSearch"
-            placeholder="Takım, oyuncu veya lig ara..."
-        >
-    </div>
-
+<div class="header-search">
+<input id="globalSearch" placeholder="Takım, oyuncu veya lig ara...">
+</div>
 </header>
 
 <main class="app">
 
-<!-- ================= LIVE ================= -->
-
 <section id="page-live" class="page active">
+<div class="page-title">🔴 Canlı Maçlar</div>
+<div class="page-subtitle">Dünyadaki canlı futbol karşılaşmaları otomatik olarak güncellenir.</div>
 
-    <div class="page-title">
-        🔴 Canlı Maçlar
-    </div>
+<div class="toolbar">
+<span class="live-badge"><span class="live-dot"></span>CANLI</span>
+<button class="btn btn-green" onclick="loadLive(true)">↻ Şimdi Yenile</button>
+<span id="liveUpdated" style="color:var(--muted);font-size:12px;padding:10px">Bekleniyor...</span>
+</div>
 
-    <div class="page-subtitle">
-        Dünyadaki canlı futbol karşılaşmaları
-        otomatik olarak güncellenir.
-    </div>
-
-    <div class="toolbar">
-
-        <span class="live-badge">
-            <span class="live-dot"></span>
-            CANLI
-        </span>
-
-        <button
-            class="btn btn-green"
-            onclick="loadLive(true)"
-        >
-            ↻ Şimdi Yenile
-        </button>
-
-        <span
-            id="liveUpdated"
-            style="color:var(--muted);font-size:12px;padding:10px"
-        >
-            Bekleniyor...
-        </span>
-
-    </div>
-
-    <div id="liveContainer">
-        <div class="loading">
-            <div class="spinner"></div>
-            Canlı maçlar yükleniyor...
-        </div>
-    </div>
-
+<div id="liveContainer">
+<div class="loading"><div class="spinner"></div>Canlı maçlar yükleniyor...</div>
+</div>
 </section>
-
-
-<!-- ================= FIXTURES ================= -->
 
 <section id="page-fixtures" class="page">
+<div class="page-title">📅 Fikstür</div>
+<div class="page-subtitle">Tarihe göre maçları görüntüle.</div>
 
-    <div class="page-title">
-        📅 Fikstür
-    </div>
+<div class="toolbar">
+<input type="date" id="fixtureDate" class="input">
+<button class="btn btn-green" onclick="loadFixtures()">Maçları Getir</button>
+</div>
 
-    <div class="page-subtitle">
-        Tarihe göre maçları görüntüle.
-    </div>
-
-    <div class="toolbar">
-
-        <input
-            type="date"
-            id="fixtureDate"
-            class="input"
-        >
-
-        <button
-            class="btn btn-green"
-            onclick="loadFixtures()"
-        >
-            Maçları Getir
-        </button>
-
-    </div>
-
-    <div id="fixturesContainer">
-        <div class="empty">
-            Tarih seçip maçları getir.
-        </div>
-    </div>
-
+<div id="fixturesContainer"><div class="empty">Tarih seçip maçları getir.</div></div>
 </section>
-
-
-<!-- ================= LEAGUES ================= -->
 
 <section id="page-leagues" class="page">
+<div class="page-title">🏆 Ligler</div>
+<div class="page-subtitle">Lig ara ve sezonunu seç.</div>
 
-    <div class="page-title">
-        🏆 Ligler
-    </div>
+<div class="toolbar">
+<input id="leagueSearch" class="input" placeholder="Premier League, Süper Lig...">
+<button class="btn btn-green" onclick="searchLeagues()">🔎 Ara</button>
+</div>
 
-    <div class="page-subtitle">
-        Lig ara ve sezonunu seç.
-    </div>
-
-    <div class="toolbar">
-
-        <input
-            id="leagueSearch"
-            class="input"
-            placeholder="Premier League, Süper Lig..."
-        >
-
-        <button
-            class="btn btn-green"
-            onclick="searchLeagues()"
-        >
-            🔎 Ara
-        </button>
-
-    </div>
-
-    <div id="leagueResults">
-        <div class="empty">
-            Bir lig arayın.
-        </div>
-    </div>
-
+<div id="leagueResults"><div class="empty">Bir lig arayın.</div></div>
 </section>
-
-
-<!-- ================= STANDINGS ================= -->
 
 <section id="page-standings" class="page">
+<div class="page-title">📈 Puan Durumu</div>
+<div class="page-subtitle">Seçtiğin ligin seçtiğin sezon puan durumu.</div>
 
-    <div class="page-title">
-        📈 Puan Durumu
-    </div>
+<div class="toolbar">
+<input id="standingLeague" class="input" type="number" placeholder="Lig ID">
 
-    <div class="page-subtitle">
-        Seçtiğin ligin seçtiğin sezon puan durumu.
-    </div>
+<select id="standingSeason" class="select"></select>
 
-    <div class="toolbar">
+<button class="btn btn-green" onclick="loadStandings()">
+Puan Durumunu Getir
+</button>
+</div>
 
-        <input
-            id="standingLeague"
-            class="input"
-            type="number"
-            placeholder="Lig ID"
-        >
-
-        <select
-            id="standingSeason"
-            class="select"
-        >
-        </select>
-
-        <button
-            class="btn btn-green"
-            onclick="loadStandings()"
-        >
-            Puan Durumunu Getir
-        </button>
-
-    </div>
-
-    <div id="standingsContainer">
-        <div class="empty">
-            Lig ve sezon seçin.
-        </div>
-    </div>
-
+<div id="standingsContainer">
+<div class="empty">Lig ve sezon seçin.</div>
+</div>
 </section>
-
-
-<!-- ================= SEARCH ================= -->
 
 <section id="page-search" class="page">
+<div class="page-title">🔎 GOALHUB Arama</div>
+<div class="page-subtitle">Takım, oyuncu veya lig bul.</div>
 
-    <div class="page-title">
-        🔎 GOALHUB Arama
-    </div>
+<div class="toolbar">
+<input id="searchInput" class="input" style="min-width:280px" placeholder="Aramak istediğin şeyi yaz...">
 
-    <div class="page-subtitle">
-        Takım, oyuncu veya lig bul.
-    </div>
+<select id="searchType" class="select">
+<option value="teams">⚽ Takımlar</option>
+<option value="players">👤 Oyuncular</option>
+<option value="leagues">🏆 Ligler</option>
+</select>
 
-    <div class="toolbar">
+<button class="btn btn-green" onclick="doSearch()">🔎 Ara</button>
+</div>
 
-        <input
-            id="searchInput"
-            class="input"
-            style="min-width:280px"
-            placeholder="Aramak istediğin şeyi yaz..."
-        >
-
-        <select
-            id="searchType"
-            class="select"
-        >
-            <option value="teams">⚽ Takımlar</option>
-            <option value="players">👤 Oyuncular</option>
-            <option value="leagues">🏆 Ligler</option>
-        </select>
-
-        <button
-            class="btn btn-green"
-            onclick="doSearch()"
-        >
-            🔎 Ara
-        </button>
-
-    </div>
-
-    <div id="searchResults">
-        <div class="empty">
-            Arama yapın.
-        </div>
-    </div>
-
+<div id="searchResults"><div class="empty">Arama yapın.</div></div>
 </section>
-
-
-<!-- ================= DETAIL ================= -->
 
 <section id="page-detail" class="page">
-
-    <div class="toolbar">
-
-        <button
-            class="btn"
-            onclick="goBack()"
-        >
-            ← Geri
-        </button>
-
-    </div>
-
-    <div id="detailContainer">
-
-        <div class="loading">
-            <div class="spinner"></div>
-            Maç detayları yükleniyor...
-        </div>
-
-    </div>
-
+<div class="toolbar">
+<button class="btn" onclick="goBack()">← Geri</button>
+</div>
+<div id="detailContainer">
+<div class="loading"><div class="spinner"></div>Maç detayları yükleniyor...</div>
+</div>
 </section>
-
-
-<!-- ================= TEAM ================= -->
 
 <section id="page-team" class="page">
-
-    <div class="toolbar">
-
-        <button
-            class="btn"
-            onclick="goBack()"
-        >
-            ← Geri
-        </button>
-
-    </div>
-
-    <div id="teamContainer">
-
-        <div class="loading">
-            <div class="spinner"></div>
-            Takım yükleniyor...
-        </div>
-
-    </div>
-
+<div class="toolbar">
+<button class="btn" onclick="goBack()">← Geri</button>
+</div>
+<div id="teamContainer">
+<div class="loading"><div class="spinner"></div>Takım yükleniyor...</div>
+</div>
 </section>
 
-
-<!-- ================= PLAYER ================= -->
-
 <section id="page-player" class="page">
-
-    <div class="toolbar">
-
-        <button
-            class="btn"
-            onclick="goBack()"
-        >
-            ← Geri
-        </button>
-
-    </div>
-
-    <div id="playerContainer">
-
-        <div class="loading">
-            <div class="spinner"></div>
-            Oyuncu yükleniyor...
-        </div>
-
-    </div>
-
+<div class="toolbar">
+<button class="btn" onclick="goBack()">← Geri</button>
+</div>
+<div id="playerContainer">
+<div class="loading"><div class="spinner"></div>Oyuncu yükleniyor...</div>
+</div>
 </section>
 
 </main>
 
-
-<div
-    id="goalToast"
-    class="goal-toast"
->
-    <div class="goal-toast-title">
-        ⚽ GOOOOL!
-    </div>
-
-    <div
-        id="goalToastText"
-        class="goal-toast-text"
-    >
-        Gol!
-    </div>
-
-    <div
-        id="goalToastSub"
-        class="goal-toast-sub"
-    >
-        GOALHUB PRO
-    </div>
+<div id="goalToast" class="goal-toast">
+<div class="goal-toast-title">⚽ GOOOOL!</div>
+<div id="goalToastText" class="goal-toast-text">Gol!</div>
+<div id="goalToastSub" class="goal-toast-sub">GOALHUB PRO</div>
 </div>
 
-
 <nav class="mobile-nav">
-
-    <button
-        data-page="live"
-        class="active"
-    >
-        🔴<br>Canlı
-    </button>
-
-    <button
-        data-page="fixtures"
-    >
-        📅<br>Fikstür
-    </button>
-
-    <button
-        data-page="standings"
-    >
-        📈<br>Puan
-    </button>
-
-    <button
-        data-page="search"
-    >
-        🔎<br>Ara
-    </button>
-
+<button data-page="live" class="active">🔴<br>Canlı</button>
+<button data-page="fixtures">📅<br>Fikstür</button>
+<button data-page="standings">📈<br>Puan</button>
+<button data-page="search">🔎<br>Ara</button>
 </nav>
 
-
 <script>
+const API="/api";
 
-/* =====================================================
-   GLOBAL
-===================================================== */
+let currentPage="live";
+let lastPage="live";
+let currentDetailId=null;
+let liveMatches=[];
+let previousScores={};
+let selectedLeague=null;
 
-const API = "/api";
-
-let currentPage = "live";
-
-let liveMatches = [];
-
-let previousScores = {};
-
-let liveTimer = null;
-
-let currentDetailId = null;
-
-let lastPage = "live";
-
-let selectedLeague = null;
-
-
-/* =====================================================
-   HELPERS
-===================================================== */
+function $(id){return document.getElementById(id)}
 
 function esc(value){
-
-    if(value === null || value === undefined){
-        return "";
-    }
-
-    return String(value)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
+ if(value===null||value===undefined)return "";
+ return String(value)
+ .replaceAll("&","&amp;")
+ .replaceAll("<","&lt;")
+ .replaceAll(">","&gt;")
+ .replaceAll('"',"&quot;")
+ .replaceAll("'","&#039;");
 }
-
-
-function $(id){
-    return document.getElementById(id);
-}
-
 
 async function api(url){
-
-    const response =
-        await fetch(url);
-
-    let data;
-
-    try{
-        data = await response.json();
-    }
-    catch{
-        throw new Error(
-            "Sunucudan geçersiz cevap geldi."
-        );
-    }
-
-    if(!response.ok){
-
-        throw new Error(
-            data.error ||
-            "API hatası."
-        );
-
-    }
-
-    return data;
+ const response=await fetch(url);
+ let data;
+ try{data=await response.json()}
+ catch{throw new Error("Sunucudan geçersiz cevap geldi.")}
+ if(!response.ok)throw new Error(data.error||"API hatası.");
+ return data;
 }
-
 
 function loading(){
-
-    return `
-        <div class="loading">
-            <div class="spinner"></div>
-            Yükleniyor...
-        </div>
-    `;
-
+ return `<div class="loading"><div class="spinner"></div>Yükleniyor...</div>`;
 }
-
 
 function empty(text){
-
-    return `
-        <div class="empty">
-            ${esc(text)}
-        </div>
-    `;
-
+ return `<div class="empty">${esc(text)}</div>`;
 }
-
 
 function logo(url){
-
-    if(!url){
-
-        return `
-            <div
-                class="team-logo"
-                style="display:flex;align-items:center;justify-content:center"
-            >
-                ⚽
-            </div>
-        `;
-
-    }
-
-    return `
-        <img
-            class="team-logo"
-            src="${esc(url)}"
-            onerror="this.style.display='none'"
-        >
-    `;
-
+ if(!url){
+  return `<div class="team-logo" style="display:flex;align-items:center;justify-content:center">⚽</div>`;
+ }
+ return `<img class="team-logo" src="${esc(url)}" onerror="this.style.display='none'">`;
 }
 
-
-/* =====================================================
-   PAGE SYSTEM
-===================================================== */
+function logoLarge(url){
+ if(!url){
+  return `<div style="width:80px;height:80px;display:flex;align-items:center;justify-content:center;background:#172130;border-radius:14px;font-size:30px">⚽</div>`;
+ }
+ return `<img src="${esc(url)}" style="width:80px;height:80px;object-fit:contain">`;
+}
 
 function showPage(page){
+ document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
 
-    document
-        .querySelectorAll(".page")
-        .forEach(p=>{
-            p.classList.remove("active");
-        });
+ const target=$("page-"+page);
+ if(target)target.classList.add("active");
 
-    const target =
-        $("page-" + page);
+ document.querySelectorAll("[data-page]").forEach(btn=>{
+  btn.classList.toggle("active",btn.dataset.page===page);
+ });
 
-    if(target){
-        target.classList.add("active");
-    }
+ if(!["detail","team","player"].includes(page))lastPage=page;
 
-    document
-        .querySelectorAll("[data-page]")
-        .forEach(btn=>{
-            btn.classList.toggle(
-                "active",
-                btn.dataset.page === page
-            );
-        });
-
-    if(
-        page !== "detail" &&
-        page !== "team" &&
-        page !== "player"
-    ){
-
-        lastPage = page;
-
-    }
-
-    currentPage = page;
-
-    window.scrollTo({
-        top:0,
-        behavior:"smooth"
-    });
-
+ currentPage=page;
+ window.scrollTo({top:0,behavior:"smooth"});
 }
 
-
-/* =====================================================
-   NAV
-===================================================== */
-
-document
-    .querySelectorAll("[data-page]")
-    .forEach(btn=>{
-
-        btn.addEventListener(
-            "click",
-            ()=>{
-
-                showPage(
-                    btn.dataset.page
-                );
-
-            }
-        );
-
-    });
-
+document.querySelectorAll("[data-page]").forEach(btn=>{
+ btn.addEventListener("click",()=>showPage(btn.dataset.page));
+});
 
 function goBack(){
-
-    showPage(lastPage || "live");
-
+ showPage(lastPage||"live");
 }
-
-
-/* =====================================================
-   DATE
-===================================================== */
 
 function localDate(){
-
-    const d = new Date();
-
-    const year =
-        d.getFullYear();
-
-    const month =
-        String(
-            d.getMonth()+1
-        ).padStart(2,"0");
-
-    const day =
-        String(
-            d.getDate()
-        ).padStart(2,"0");
-
-    return `${year}-${month}-${day}`;
-
+ const d=new Date();
+ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 }
 
-
-$("fixtureDate").value =
-    localDate();
-
-
-/* =====================================================
-   SEASON
-===================================================== */
+$("fixtureDate").value=localDate();
 
 function buildSeasons(){
+ const select=$("standingSeason");
+ const current=new Date().getFullYear();
 
-    const selects = [
-        $("standingSeason")
-    ];
+ select.innerHTML="";
 
-    const current =
-        new Date().getFullYear();
+ for(let year=current;year>=current-5;year--){
+  const option=document.createElement("option");
+  option.value=year;
+  option.textContent=`${year}/${String(year+1).slice(-2)}`;
+  select.appendChild(option);
+ }
 
-    selects.forEach(select=>{
-
-        select.innerHTML = "";
-
-        /*
-          API-Football sezonları başlangıç yılıyla
-          temsil eder.
-
-          Ağustos 2026:
-          2026 = 2026/27
-        */
-
-        for(
-            let year = current;
-            year >= current - 5;
-            year--
-        ){
-
-            const option =
-                document.createElement("option");
-
-            option.value = year;
-
-            option.textContent =
-                `${year}/${String(year+1).slice(-2)}`;
-
-            select.appendChild(option);
-
-        }
-
-        select.value = current;
-
-    });
-
+ select.value=current;
 }
 
 buildSeasons();
 
-
-/* =====================================================
-   LIVE MATCHES
-===================================================== */
+/* ================= LIVE ================= */
 
 async function loadLive(manual=false){
+ try{
+  if(manual)$("liveContainer").innerHTML=loading();
 
-    try{
+  const data=await api(API+"/live");
 
-        if(manual){
+  liveMatches=data.response||[];
 
-            $("liveContainer").innerHTML =
-                loading();
+  renderMatches($("liveContainer"),liveMatches,true);
 
-        }
+  $("liveUpdated").textContent=
+   "Son güncelleme: "+
+   new Date().toLocaleTimeString("tr-TR");
 
-        const data =
-            await api(
-                API + "/live"
-            );
-
-        liveMatches =
-            data.response || [];
-
-        renderMatches(
-            $("liveContainer"),
-            liveMatches,
-            true
-        );
-
-        $("liveUpdated").textContent =
-            "Son güncelleme: " +
-            new Date().toLocaleTimeString(
-                "tr-TR"
-            );
-
-        detectGoals(
-            liveMatches
-        );
-
-    }
-    catch(error){
-
-        $("liveContainer").innerHTML =
-            empty(
-                "Canlı maçlar alınamadı: " +
-                error.message
-            );
-
-    }
-
+  detectGoals(liveMatches);
+ }
+ catch(error){
+  $("liveContainer").innerHTML=
+   empty("Canlı maçlar alınamadı: "+error.message);
+ }
 }
 
+function renderMatches(container,matches,live=false){
+ if(!matches.length){
+  container.innerHTML=empty(
+   live?"Şu anda canlı maç bulunmuyor.":"Bu tarihte maç bulunamadı."
+  );
+  return;
+ }
 
-function renderMatches(
-    container,
-    matches,
-    live=false
-){
+ const groups={};
 
-    if(!matches.length){
+ matches.forEach(match=>{
+  const league=match.league||{};
+  const key=league.id||league.name||"other";
 
-        container.innerHTML =
-            empty(
-                live
-                ? "Şu anda canlı maç bulunmuyor."
-                : "Bu tarihte maç bulunamadı."
-            );
+  if(!groups[key])groups[key]={league,matches:[]};
 
-        return;
+  groups[key].matches.push(match);
+ });
 
-    }
-
-    /*
-      Lig bazında grupla
-    */
-
-    const groups = {};
-
-    matches.forEach(match=>{
-
-        const league =
-            match.league || {};
-
-        const key =
-            league.id ||
-            league.name ||
-            "other";
-
-        if(!groups[key]){
-            groups[key] = {
-                league,
-                matches:[]
-            };
-        }
-
-        groups[key].matches.push(
-            match
-        );
-
-    });
-
-
-    container.innerHTML =
-        Object.values(groups)
-        .map(group=>{
-
-            return `
-                <div class="panel" style="margin-bottom:16px">
-
-                    <div class="panel-head">
-
-                        <h3>
-                            ${esc(
-                                group.league?.name ||
-                                "Lig"
-                            )}
-                        </h3>
-
-                        <span style="color:var(--muted);font-size:11px">
-                            ${esc(
-                                group.league?.country ||
-                                ""
-                            )}
-                        </span>
-
-                    </div>
-
-                    ${group.matches
-                        .map(matchCard)
-                        .join("")}
-
-                </div>
-            `;
-
-        })
-        .join("");
-
+ container.innerHTML=Object.values(groups).map(group=>`
+ <div class="panel" style="margin-bottom:16px">
+  <div class="panel-head">
+   <h3>${esc(group.league?.name||"Lig")}</h3>
+   <span style="color:var(--muted);font-size:11px">
+    ${esc(group.league?.country||"")}
+   </span>
+  </div>
+  ${group.matches.map(matchCard).join("")}
+ </div>
+ `).join("");
 }
-
 
 function matchCard(match){
+ const fixture=match.fixture||{};
+ const teams=match.teams||{};
+ const goals=match.goals||{};
+ const status=fixture.status||{};
+ const home=teams.home||{};
+ const away=teams.away||{};
 
-    const fixture =
-        match.fixture || {};
+ const isLive=
+  status.live||
+  ["1H","2H","HT","ET","P","LIVE"].includes(status.short);
 
-    const teams =
-        match.teams || {};
+ let statusText=status.long||status.short||"";
 
-    const goals =
-        match.goals || {};
+ if(status.elapsed!==null&&status.elapsed!==undefined&&isLive){
+  statusText=`${status.elapsed}' ${status.long||""}`;
+ }
 
-    const status =
-        fixture.status || {};
+ const scoreHome=goals.home??0;
+ const scoreAway=goals.away??0;
 
-    const home =
-        teams.home || {};
+ return `
+ <div class="match" onclick="openMatch(${fixture.id})">
 
-    const away =
-        teams.away || {};
+  <div class="match-top">
+   <span>${esc(match.league?.name||"")}</span>
+   <span class="${isLive?"live-badge":""}">
+    ${isLive?'<span class="live-dot"></span>':""}
+    ${esc(statusText)}
+   </span>
+  </div>
 
-    const isLive =
-        status.live ||
-        [
-            "1H",
-            "2H",
-            "HT",
-            "ET",
-            "P",
-            "LIVE"
-        ].includes(status.short);
+  <div class="match-main">
 
-    let statusText =
-        status.long ||
-        status.short ||
-        "";
+   <div class="team">
+    ${logo(home.logo)}
+    <span>${esc(home.name||"Ev Sahibi")}</span>
+   </div>
 
-    if(
-        status.elapsed !== null &&
-        status.elapsed !== undefined &&
-        isLive
-    ){
+   <div class="score ${isLive?"live":""}">
+    ${scoreHome} - ${scoreAway}
+   </div>
 
-        statusText =
-            `${status.elapsed}' ${status.long || ""}`;
+   <div class="team away">
+    <span>${esc(away.name||"Deplasman")}</span>
+    ${logo(away.logo)}
+   </div>
 
+  </div>
+
+  <div class="match-bottom">
+   <span class="status">
+    ${
+     fixture.date
+     ? new Date(fixture.date).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})
+     :""
     }
+   </span>
 
-    const scoreHome =
-        goals.home ??
-        0;
+   <button class="detail-btn"
+    onclick="event.stopPropagation();openMatch(${fixture.id})">
+    🔥 Detay
+   </button>
+  </div>
 
-    const scoreAway =
-        goals.away ??
-        0;
-
-    return `
-        <div
-            class="match"
-            onclick="openMatch(${fixture.id})"
-        >
-
-            <div class="match-top">
-
-                <span>
-                    ${esc(
-                        match.league?.name || ""
-                    )}
-                </span>
-
-                <span class="${
-                    isLive
-                    ? "live-badge"
-                    : ""
-                }">
-
-                    ${
-                        isLive
-                        ? `<span class="live-dot"></span>`
-                        : ""
-                    }
-
-                    ${esc(statusText)}
-
-                </span>
-
-            </div>
-
-
-            <div class="match-main">
-
-                <div class="team">
-
-                    ${logo(home.logo)}
-
-                    <span>
-                        ${esc(
-                            home.name ||
-                            "Ev Sahibi"
-                        )}
-                    </span>
-
-                </div>
-
-
-                <div class="
-                    score
-                    ${isLive ? "live" : ""}
-                ">
-
-                    ${scoreHome}
-                    -
-                    ${scoreAway}
-
-                </div>
-
-
-                <div class="team away">
-
-                    <span>
-                        ${esc(
-                            away.name ||
-                            "Deplasman"
-                        )}
-                    </span>
-
-                    ${logo(away.logo)}
-
-                </div>
-
-            </div>
-
-
-            <div class="match-bottom">
-
-                <span class="status">
-
-                    ${
-                        fixture.date
-                        ? new Date(
-                            fixture.date
-                          ).toLocaleTimeString(
-                            "tr-TR",
-                            {
-                                hour:"2-digit",
-                                minute:"2-digit"
-                            }
-                          )
-                        : ""
-                    }
-
-                </span>
-
-                <button
-                    class="detail-btn"
-                    onclick="
-                        event.stopPropagation();
-                        openMatch(${fixture.id});
-                    "
-                >
-                    🔥 Detay
-                </button>
-
-            </div>
-
-        </div>
-    `;
-
+ </div>`;
 }
 
-
-/* =====================================================
-   GOAL DETECTION
-===================================================== */
+/* ================= GOALS ================= */
 
 function detectGoals(matches){
+ matches.forEach(match=>{
+  const id=match.fixture?.id;
+  if(!id)return;
 
-    matches.forEach(match=>{
+  const home=match.goals?.home??0;
+  const away=match.goals?.away??0;
+  const score=`${home}-${away}`;
 
-        const id =
-            match.fixture?.id;
+  if(previousScores[id]&&previousScores[id]!==score){
+   showGoalToast(match);
+  }
 
-        if(!id){
-            return;
-        }
-
-        const home =
-            match.goals?.home ?? 0;
-
-        const away =
-            match.goals?.away ?? 0;
-
-        const score =
-            `${home}-${away}`;
-
-        if(
-            previousScores[id] &&
-            previousScores[id] !== score
-        ){
-
-            showGoalToast(
-                match
-            );
-
-        }
-
-        previousScores[id] =
-            score;
-
-    });
-
+  previousScores[id]=score;
+ });
 }
-
 
 function showGoalToast(match){
+ const home=match.teams?.home?.name||"";
+ const away=match.teams?.away?.name||"";
+ const score=`${match.goals?.home??0} - ${match.goals?.away??0}`;
 
-    const home =
-        match.teams?.home?.name ||
-        "";
+ $("goalToastText").textContent=`${home} ${score} ${away}`;
+ $("goalToastSub").textContent=match.league?.name||"Canlı maç";
 
-    const away =
-        match.teams?.away?.name ||
-        "";
+ const toast=$("goalToast");
+ toast.classList.add("show");
 
-    const score =
-        `${match.goals?.home ?? 0} - ${match.goals?.away ?? 0}`;
-
-    $("goalToastText").textContent =
-        `${home} ${score} ${away}`;
-
-    $("goalToastSub").textContent =
-        match.league?.name ||
-        "Canlı maç";
-
-    const toast =
-        $("goalToast");
-
-    toast.classList.add("show");
-
-    setTimeout(()=>{
-        toast.classList.remove("show");
-    },6000);
-
+ setTimeout(()=>toast.classList.remove("show"),6000);
 }
-
-
-/* =====================================================
-   LIVE AUTO REFRESH
-===================================================== */
 
 loadLive();
 
-liveTimer =
-    setInterval(
-        ()=>{
-            if(currentPage === "live"){
-                loadLive();
-            }
-        },
-        15000
-    );
+setInterval(()=>{
+ if(currentPage==="live")loadLive();
+},15000);
 
-
-/* =====================================================
-   FIXTURES
-===================================================== */
+/* ================= FIXTURES ================= */
 
 async function loadFixtures(){
+ const date=$("fixtureDate").value;
 
-    const date =
-        $("fixtureDate").value;
+ if(!date){
+  $("fixturesContainer").innerHTML=empty("Lütfen tarih seç.");
+  return;
+ }
 
-    if(!date){
+ $("fixturesContainer").innerHTML=loading();
 
-        $("fixturesContainer").innerHTML =
-            empty(
-                "Lütfen tarih seç."
-            );
+ try{
+  const data=await api(
+   API+"/fixtures?date="+encodeURIComponent(date)
+  );
 
-        return;
-
-    }
-
-    $("fixturesContainer").innerHTML =
-        loading();
-
-    try{
-
-        const data =
-            await api(
-                API +
-                "/fixtures?date=" +
-                encodeURIComponent(date)
-            );
-
-        renderMatches(
-            $("fixturesContainer"),
-            data.response || [],
-            false
-        );
-
-    }
-    catch(error){
-
-        $("fixturesContainer").innerHTML =
-            empty(
-                "Fikstür alınamadı: " +
-                error.message
-            );
-
-    }
-
+  renderMatches(
+   $("fixturesContainer"),
+   data.response||[],
+   false
+  );
+ }
+ catch(error){
+  $("fixturesContainer").innerHTML=
+   empty("Fikstür alınamadı: "+error.message);
+ }
 }
 
-
-/* =====================================================
-   MATCH DETAIL
-===================================================== */
+/* ================= MATCH DETAIL ================= */
 
 async function openMatch(id){
+ if(!id)return;
 
-    if(!id){
-        return;
-    }
+ currentDetailId=id;
+ showPage("detail");
+ $("detailContainer").innerHTML=loading();
 
-    currentDetailId =
-        id;
+ try{
+  const [fixtureData,eventsData,statsData]=await Promise.all([
+   api(API+"/fixture/"+id),
+   api(API+"/fixture/"+id+"/events"),
+   api(API+"/fixture/"+id+"/statistics")
+  ]);
 
-    showPage("detail");
+  const fixture=fixtureData.response?.[0];
+  const events=eventsData.response||[];
+  const statistics=statsData.response||[];
 
-    $("detailContainer").innerHTML =
-        loading();
+  if(!fixture)throw new Error("Maç bulunamadı.");
 
-    try{
-
-        /*
-          ÖNEMLİ:
-
-          Frontend burada
-          /fixture/:id
-          endpointine gider.
-
-          /fixture/id değil.
-          /api/fixture/id olmalı.
-        */
-
-        const [
-            fixtureData,
-            eventsData,
-            statsData
-        ] = await Promise.all([
-
-            api(
-                API +
-                "/fixture/" +
-                id
-            ),
-
-            api(
-                API +
-                "/fixture/" +
-                id +
-                "/events"
-            ),
-
-            api(
-                API +
-                "/fixture/" +
-                id +
-                "/statistics"
-            )
-
-        ]);
-
-        const fixture =
-            fixtureData.response?.[0];
-
-        const events =
-            eventsData.response || [];
-
-        const statistics =
-            statsData.response || [];
-
-        if(!fixture){
-
-            throw new Error(
-                "Maç bulunamadı."
-            );
-
-        }
-
-        renderDetail(
-            fixture,
-            events,
-            statistics
-        );
-
-    }
-    catch(error){
-
-        $("detailContainer").innerHTML =
-            `
-            <div class="panel">
-                <div class="empty">
-                    ❌ Maç detayı alınamadı.
-                    <br><br>
-                    ${esc(error.message)}
-                </div>
-            </div>
-            `;
-
-    }
-
+  renderDetail(fixture,events,statistics);
+ }
+ catch(error){
+  $("detailContainer").innerHTML=`
+   <div class="panel">
+    <div class="empty">
+     ❌ Maç detayı alınamadı.<br><br>
+     ${esc(error.message)}
+    </div>
+   </div>`;
+ }
 }
 
-
-function renderDetail(
-    fixture,
-    events,
-    statistics
-){
-
-    const teams =
-        fixture.teams || {};
-
-    const goals =
-        fixture.goals || {};
-
-    const status =
-        fixture.fixture?.status || {};
-
-    const home =
-        teams.home || {};
-
-    const away =
-        teams.away || {};
-
-    $("detailContainer").innerHTML = `
-
-        <div class="panel">
-
-            <div class="panel-head">
-
-                <div>
-                    <b>
-                        ${esc(
-                            fixture.league?.name ||
-                            ""
-                        )}
-                    </b>
-
-                    <div style="
-                        color:var(--muted);
-                        font-size:11px;
-                        margin-top:4px;
-                    ">
-                        ${esc(
-                            fixture.league?.country ||
-                            ""
-                        )}
-                    </div>
-                </div>
-
-                <span class="live-badge">
-                    ${esc(
-                        status.long ||
-                        status.short ||
-                        ""
-                    )}
-                </span>
-
-            </div>
-
-
-            <div class="detail-score">
-
-                <div class="detail-teams">
-
-                    <div class="detail-team">
-
-                        ${logoLarge(home.logo)}
-
-                        <span>
-                            ${esc(home.name)}
-                        </span>
-
-                    </div>
-
-
-                    <div>
-
-                        <div class="big-score">
-
-                            ${
-                                goals.home ??
-                                0
-                            }
-
-                            -
-
-                            ${
-                                goals.away ??
-                                0
-                            }
-
-                        </div>
-
-                        <div class="detail-status">
-
-                            ${
-                                status.elapsed
-                                ? status.elapsed + "'"
-                                : (
-                                    status.short ||
-                                    ""
-                                )
-                            }
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="detail-team">
-
-                        ${logoLarge(away.logo)}
-
-                        <span>
-                            ${esc(away.name)}
-                        </span>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="grid grid-2" style="margin-top:16px">
-
-
-            <div class="panel">
-
-                <div class="panel-head">
-
-                    <h3>
-                        ⚽ Olaylar
-                    </h3>
-
-                </div>
-
-                <div class="events">
-
-                    ${
-                        renderEvents(
-                            events,
-                            home.id
-                        )
-                    }
-
-                </div>
-
-            </div>
-
-
-            <div class="panel">
-
-                <div class="panel-head">
-
-                    <h3>
-                        📊 İstatistikler
-                    </h3>
-
-                </div>
-
-                <div class="panel-body">
-
-                    ${
-                        renderStatistics(
-                            statistics,
-                            home.id,
-                            away.id
-                        )
-                    }
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="panel" style="margin-top:16px">
-
-            <div class="panel-head">
-
-                <h3>
-                    🛡️ Takımlar
-                </h3>
-
-            </div>
-
-            <div class="panel-body">
-
-                <div class="grid grid-2">
-
-                    <button
-                        class="btn"
-                        onclick="openTeam(${home.id})"
-                    >
-                        ${esc(home.name)}
-                    </button>
-
-                    <button
-                        class="btn"
-                        onclick="openTeam(${away.id})"
-                    >
-                        ${esc(away.name)}
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    `;
-
+function renderDetail(fixture,events,statistics){
+ const teams=fixture.teams||{};
+ const goals=fixture.goals||{};
+ const status=fixture.fixture?.status||{};
+ const home=teams.home||{};
+ const away=teams.away||{};
+
+ $("detailContainer").innerHTML=`
+
+ <div class="panel">
+
+  <div class="panel-head">
+   <div>
+    <b>${esc(fixture.league?.name||"")}</b>
+    <div style="color:var(--muted);font-size:11px;margin-top:4px">
+     ${esc(fixture.league?.country||"")}
+    </div>
+   </div>
+
+   <span class="live-badge">
+    ${esc(status.long||status.short||"")}
+   </span>
+  </div>
+
+  <div class="detail-score">
+   <div class="detail-teams">
+
+    <div class="detail-team">
+     ${logoLarge(home.logo)}
+     <span>${esc(home.name)}</span>
+    </div>
+
+    <div>
+     <div class="big-score">
+      ${goals.home??0} - ${goals.away??0}
+     </div>
+
+     <div class="detail-status">
+      ${status.elapsed?status.elapsed+"'":(status.short||"")}
+     </div>
+    </div>
+
+    <div class="detail-team">
+     ${logoLarge(away.logo)}
+     <span>${esc(away.name)}</span>
+    </div>
+
+   </div>
+  </div>
+
+ </div>
+
+ <div class="grid grid-2" style="margin-top:16px">
+
+  <div class="panel">
+   <div class="panel-head"><h3>⚽ Olaylar</h3></div>
+   <div class="events">
+    ${renderEvents(events,home.id)}
+   </div>
+  </div>
+
+  <div class="panel">
+   <div class="panel-head"><h3>📊 İstatistikler</h3></div>
+   <div class="panel-body">
+    ${renderStatistics(statistics,home.id,away.id)}
+   </div>
+  </div>
+
+ </div>
+
+ <div class="panel" style="margin-top:16px">
+  <div class="panel-head"><h3>🛡️ Takımlar</h3></div>
+
+  <div class="panel-body">
+   <div class="grid grid-2">
+
+    <button class="btn" onclick="openTeam(${home.id})">
+     ${esc(home.name)}
+    </button>
+
+    <button class="btn" onclick="openTeam(${away.id})">
+     ${esc(away.name)}
+    </button>
+
+   </div>
+  </div>
+ </div>`;
 }
-
-
-function logoLarge(url){
-
-    if(!url){
-
-        return `
-            <div style="
-                width:80px;
-                height:80px;
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                background:#172130;
-                border-radius:14px;
-                font-size:30px;
-            ">
-                ⚽
-            </div>
-        `;
-
-    }
-
-    return `
-        <img
-            src="${esc(url)}"
-            style="
-                width:80px;
-                height:80px;
-                object-fit:contain;
-            "
-        >
-    `;
-
-}
-
-
-/* =====================================================
-   EVENTS
-===================================================== */
 
 function renderEvents(events,homeId){
+ if(!events.length)return empty("Bu maç için olay bulunamadı.");
 
-    if(!events.length){
+ return events.map(event=>{
+  const teamId=event.team?.id;
+  const isHome=teamId===homeId;
 
-        return empty(
-            "Bu maç için olay bulunamadı."
-        );
+  let icon="•";
 
-    }
+  if(event.type==="Goal")icon="⚽";
+  else if(event.type==="Card"){
+   icon=event.detail?.includes("Yellow")?"🟨":"🟥";
+  }
+  else if(event.type==="subst")icon="🔄";
 
-    return events.map(event=>{
+  const player=event.player?.name||"";
+  const assist=event.assist?.name;
+  const detail=event.detail||event.type||"";
 
-        const teamId =
-            event.team?.id;
+  return `
+  <div class="event">
 
-        const isHome =
-            teamId === homeId;
+   <div class="event-time ${isHome?"event-left":""}">
+    ${esc(event.time?.elapsed??"")}'
+   </div>
 
-        let icon = "•";
+   <div class="event-center">
+    <div class="event-icon">${icon}</div>
+    <b>${esc(player)}</b>
 
-        if(event.type === "Goal"){
-            icon = "⚽";
-        }
-        else if(
-            event.type === "Card"
-        ){
+    <div style="color:var(--muted);font-size:10px;margin-top:3px">
+     ${esc(detail)}
+     ${assist?" • "+esc(assist):""}
+    </div>
+   </div>
 
-            icon =
-                event.detail?.includes(
-                    "Yellow"
-                )
-                ? "🟨"
-                : "🟥";
-
-        }
-        else if(
-            event.type === "subst"
-        ){
-            icon = "🔄";
-        }
-
-        const player =
-            event.player?.name ||
-            "";
-
-        const assist =
-            event.assist?.name;
-
-        const detail =
-            event.detail ||
-            event.type ||
-            "";
-
-        return `
-
-            <div class="event">
-
-                <div class="
-                    event-time
-                    ${isHome ? "event-left" : ""}
-                ">
-                    ${esc(
-                        event.time?.elapsed ??
-                        ""
-                    )}'
-                </div>
-
-
-                <div class="
-                    event-center
-                ">
-
-                    <div class="event-icon">
-                        ${icon}
-                    </div>
-
-                    <b>
-                        ${esc(player)}
-                    </b>
-
-                    <div style="
-                        color:var(--muted);
-                        font-size:10px;
-                        margin-top:3px;
-                    ">
-
-                        ${esc(detail)}
-
-                        ${
-                            assist
-                            ? " • " +
-                              esc(assist)
-                            : ""
-                        }
-
-                    </div>
-
-                </div>
-
-
-                <div></div>
-
-            </div>
-
-        `;
-
-    }).join("");
-
+   <div></div>
+  </div>`;
+ }).join("");
 }
 
+function renderStatistics(statistics,homeId,awayId){
+ if(!statistics.length)return empty("İstatistik bulunamadı.");
 
-/* =====================================================
-   STATISTICS
-===================================================== */
+ let homeStats={};
+ let awayStats={};
 
-function renderStatistics(
-    statistics,
-    homeId,
-    awayId
-){
+ statistics.forEach(item=>{
+  const teamId=item.team?.id;
+  const target=teamId===homeId?homeStats:awayStats;
 
-    if(!statistics.length){
+  (item.statistics||[]).forEach(stat=>{
+   target[stat.type]=stat.value;
+  });
+ });
 
-        return empty(
-            "İstatistik bulunamadı."
-        );
+ const keys=[
+  "Shots on Goal","Shots off Goal","Total Shots","Blocked Shots",
+  "Shots insidebox","Shots outsidebox","Fouls","Corner Kicks",
+  "Offsides","Ball Possession","Yellow Cards","Red Cards",
+  "Goalkeeper Saves","Total passes","Passes accurate","Passes %",
+  "expected_goals"
+ ];
 
-    }
+ const available=keys.filter(key=>
+  homeStats[key]!==undefined||awayStats[key]!==undefined
+ );
 
-    let homeStats = {};
-    let awayStats = {};
+ if(!available.length)return empty("İstatistik verisi yok.");
 
-    statistics.forEach(item=>{
+ return available.map(key=>`
+ <div class="stat-row">
 
-        const teamId =
-            item.team?.id;
+  <div class="home">
+   ${esc(formatStat(homeStats[key]))}
+  </div>
 
-        const stats =
-            item.statistics || [];
+  <div class="stat-name">
+   ${esc(key)}
+  </div>
 
-        const target =
-            teamId === homeId
-            ? homeStats
-            : awayStats;
+  <div class="away">
+   ${esc(formatStat(awayStats[key]))}
+  </div>
 
-        stats.forEach(stat=>{
-
-            target[
-                stat.type
-            ] =
-                stat.value;
-
-        });
-
-    });
-
-
-    const keys = [
-        "Shots on Goal",
-        "Shots off Goal",
-        "Total Shots",
-        "Blocked Shots",
-        "Shots insidebox",
-        "Shots outsidebox",
-        "Fouls",
-        "Corner Kicks",
-        "Offsides",
-        "Ball Possession",
-        "Yellow Cards",
-        "Red Cards",
-        "Goalkeeper Saves",
-        "Total passes",
-        "Passes accurate",
-        "Passes %",
-        "expected_goals"
-    ];
-
-
-    const available =
-        keys.filter(
-            key =>
-                homeStats[key] !== undefined ||
-                awayStats[key] !== undefined
-        );
-
-
-    if(!available.length){
-
-        return empty(
-            "İstatistik verisi yok."
-        );
-
-    }
-
-
-    return available.map(key=>{
-
-        return `
-
-            <div class="stat-row">
-
-                <div class="home">
-                    ${esc(
-                        formatStat(
-                            homeStats[key]
-                        )
-                    )}
-                </div>
-
-                <div class="stat-name">
-                    ${esc(key)}
-                </div>
-
-                <div class="away">
-                    ${esc(
-                        formatStat(
-                            awayStats[key]
-                        )
-                    )}
-                </div>
-
-            </div>
-
-        `;
-
-    }).join("");
-
+ </div>`).join("");
 }
-
 
 function formatStat(value){
-
-    if(
-        value === null ||
-        value === undefined
-    ){
-
-        return "-";
-
-    }
-
-    return String(value);
-
+ if(value===null||value===undefined)return "-";
+ return String(value);
 }
 
-
-/* =====================================================
-   LEAGUES
-===================================================== */
+/* ================= LEAGUES ================= */
 
 async function searchLeagues(){
+ const search=$("leagueSearch").value.trim();
 
-    const search =
-        $("leagueSearch")
-        .value
-        .trim();
+ if(!search){
+  $("leagueResults").innerHTML=empty("Lig adı yaz.");
+  return;
+ }
 
-    if(!search){
+ $("leagueResults").innerHTML=loading();
 
-        $("leagueResults").innerHTML =
-            empty(
-                "Lig adı yaz."
-            );
+ try{
+  const data=await api(
+   API+"/leagues?search="+encodeURIComponent(search)
+  );
 
-        return;
+  const results=data.response||[];
 
-    }
+  if(!results.length){
+   $("leagueResults").innerHTML=empty("Lig bulunamadı.");
+   return;
+  }
 
-    $("leagueResults").innerHTML =
-        loading();
+  $("leagueResults").innerHTML=`
+   <div class="search-results">
+    ${results.map(item=>{
+     const league=item.league||{};
+     const country=item.country||{};
 
-    try{
+     return `
+     <div class="search-result"
+      onclick="selectLeague(${league.id})">
 
-        const data =
-            await api(
-                API +
-                "/leagues?search=" +
-                encodeURIComponent(search)
-            );
+      ${
+       league.logo
+       ? `<img src="${esc(league.logo)}">`
+       : "<span style='font-size:35px'>🏆</span>"
+      }
 
-        const results =
-            data.response || [];
+      <div class="search-result-info">
+       <div class="search-result-title">
+        ${esc(league.name)}
+       </div>
 
-        if(!results.length){
+       <div class="search-result-sub">
+        ${esc(country.name||"")} · ID: ${league.id}
+       </div>
+      </div>
 
-            $("leagueResults").innerHTML =
-                empty(
-                    "Lig bulunamadı."
-                );
-
-            return;
-
-        }
-
-        $("leagueResults").innerHTML =
-            `<div class="search-results">` +
-            results
-            .map(item=>{
-
-                const league =
-                    item.league || {};
-
-                const country =
-                    item.country || {};
-
-                return `
-
-                    <div
-                        class="search-result"
-                        onclick="
-                            selectLeague(
-                                ${league.id},
-                                '${esc(
-                                    league.name
-                                )}'
-                            )
-                        "
-                    >
-
-                        ${
-                            league.logo
-                            ? `
-                            <img
-                                src="${esc(
-                                    league.logo
-                                )}"
-                            >
-                            `
-                            : "🏆"
-                        }
-
-                        <div class="search-result-info">
-
-                            <div class="search-result-title">
-                                ${esc(
-                                    league.name
-                                )}
-                            </div>
-
-                            <div class="search-result-sub">
-
-                                ${esc(
-                                    country.name ||
-                                    ""
-                                )}
-
-                                · ID:
-                                ${league.id}
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                `;
-
-            })
-            .join("") +
-            `</div>`;
-
-    }
-    catch(error){
-
-        $("leagueResults").innerHTML =
-            empty(
-                error.message
-            );
-
-    }
-
+     </div>`;
+    }).join("")}
+   </div>`;
+ }
+ catch(error){
+  $("leagueResults").innerHTML=empty(error.message);
+ }
 }
 
-
-function selectLeague(id,name){
-
-    selectedLeague = id;
-
-    $("standingLeague").value =
-        id;
-
-    showPage(
-        "standings"
-    );
-
-    loadStandings();
-
+function selectLeague(id){
+ selectedLeague=id;
+ $("standingLeague").value=id;
+ showPage("standings");
+ loadStandings();
 }
 
-
-/* =====================================================
-   STANDINGS
-===================================================== */
+/* ================= STANDINGS ================= */
 
 async function loadStandings(){
 
-    const league =
-        $("standingLeague")
-        .value
-        .trim();
+ const league=$("standingLeague").value.trim();
+ const season=$("standingSeason").value;
 
-    const season =
-        $("standingSeason")
-        .value;
+ if(!league){
+  $("standingsContainer").innerHTML=
+   empty("Lig ID gerekli.");
+  return;
+ }
 
-    if(!league){
+ $("standingsContainer").innerHTML=loading();
 
-        $("standingsContainer").innerHTML =
-            empty(
-                "Lig ID gerekli."
-            );
+ try{
 
-        return;
+  const data=await api(
+   API+
+   "/standings?league="+
+   encodeURIComponent(league)+
+   "&season="+
+   encodeURIComponent(season)
+  );
 
-    }
+  renderStandings(data);
 
-    $("standingsContainer").innerHTML =
-        loading();
+ }
+ catch(error){
 
-    try{
+  $("standingsContainer").innerHTML=
+   empty("Puan durumu alınamadı: "+error.message);
 
-        const data =
-            await api(
-                API +
-                "/standings?league=" +
-                encodeURIComponent(league) +
-                "&season=" +
-                encodeURIComponent(season)
-            );
-
-        renderStandings(
-            data
-        );
-
-    }
-    catch(error){
-
-        $("standingsContainer").innerHTML =
-            empty(
-                "Puan durumu alınamadı: " +
-                error.message
-            );
-
-    }
-
+ }
 }
-
 
 function renderStandings(data){
 
-    const leagues =
-        data.response || [];
+ const leagues=data.response||[];
 
-    if(!leagues.length){
+ if(!leagues.length){
+  $("standingsContainer").innerHTML=
+   empty("Puan durumu bulunamadı.");
+  return;
+ }
 
-        $("standingsContainer").innerHTML =
-            empty(
-                "Puan durumu bulunamadı."
-            );
+ const league=leagues[0];
 
-        return;
+ const standings=
+  league.league?.standings||[];
 
-    }
+ const rows=
+  Array.isArray(standings[0])
+  ? standings.flat()
+  : standings;
 
-    const league =
-        leagues[0];
+ if(!rows.length){
+  $("standingsContainer").innerHTML=
+   empty("Bu lig için puan durumu bulunamadı.");
+  return;
+ }
 
-    const standings =
-        league.league?.standings || [];
+ $("standingsContainer").innerHTML=`
 
-    /*
-       API-Football bazı liglerde
-       standings'i [ [ ... ] ] şeklinde döndürür.
-    */
+ <div class="panel">
 
-    const rows =
-        Array.isArray(standings[0])
-        ? standings.flat()
-        : standings;
+  <div class="panel-head">
 
-    $("standingsContainer").innerHTML = `
+   <div>
 
-        <div class="panel">
+    <h3>
+     ${esc(league.league?.name||"Puan Durumu")}
+    </h3>
 
-            <div class="panel-head">
+    <div style="
+     color:var(--muted);
+     font-size:11px;
+     margin-top:4px
+    ">
+     Sezon:
+     ${esc(
+      league.season||
+      $("standingSeason").value
+     )}
+    </div>
 
-                <div>
+   </div>
 
-                    <h3>
-                        ${esc(
-                            league.league?.name ||
-                            ""
-                        )}
-                    </h3>
+  </div>
 
-                    <div style="
-                        color:var(--muted);
-                        font-size:11px;
-                        margin-top:4px;
-                    ">
+  <div class="table-wrap">
 
-                        Sezon:
-                        ${esc(
-                            league.season ||
-                            $("standingSeason").value
-                        )}
+   <table>
 
-                    </div>
+    <thead>
+     <tr>
+      <th>#</th>
+      <th>Takım</th>
+      <th>O</th>
+      <th>G</th>
+      <th>B</th>
+      <th>M</th>
+      <th>AG</th>
+      <th>YG</th>
+      <th>AV</th>
+      <th>P</th>
+     </tr>
+    </thead>
 
-                </div>
+    <tbody>
 
-            </div>
+     ${rows.map(row=>{
 
-            <div class="table-wrap">
+      const team=row.team||{};
+      const all=row.all||{};
+      const goals=row.goals||{};
 
-                <table>
+      return `
 
-                    <thead>
+      <tr>
 
-                        <tr>
-                            <th>#</th>
-                            <th>Takım</th>
-                            <th>O</th>
-                            <th>G</th>
-                            <th>B</th>
-                            <th>M</th>
-                            <th>AV</th>
-                            <th>P</th>
-                        </tr>
+       <td class="rank">
+        ${row.rank??""}
+       </td>
 
-                    </thead>
+       <td>
 
-                    <tbody>
+        <div class="club-cell">
 
-                        ${
-                            rows
-                            .map(row=>{
+         ${
+          team.logo
+          ? `<img src="${esc(team.logo)}">`
+          : "⚽"
+         }
 
-                                const team =
-                                    row.team || {};
-
-                                const all =
-                                    row.all || {};
-
-                                const goals =
-                                    row.goalsDiff ??
-                                    "-";
-
-                                return `
-
-                                    <tr>
-
-                                        <td class="rank">
-                                            ${row.rank ?? ""}
-                                        </td>
-
-                                        <td>
-
-                                            <div class="club-cell">
-
-                                                ${
-                                                    team.logo
-                                                    ? `
-                                                    <img
-                                                        src="${esc(
-                                                            team.logo
-                                                        )}"
-                                                    >
-                                                    `
-                                                    : ""
-                                                }
-
-                                                <b>
-                                                    ${esc(
-                                                        team.name
-                                                    )}
-                                                </b>
-
-                                            </div>
-
-                                        </td>
-
-                                        <td>
-                                            ${all.played ?? 0}
-                                        </td>
-
-                                        <td>
-                                            ${all.win ?? 0}
-                                        </td>
-
-                                        <td>
-                                            ${all.draw ?? 0}
-                                        </td>
-
-                                        <td>
-                                            ${all.lose ?? 0}
-                                        </td>
-
-                                        <td>
-                                            ${goals}
-                                        </td>
-
-                                        <td>
-                                            <b>
-                                                ${row.points ?? 0}
-                                            </b>
-                                        </td>
-
-                                    </tr>
-
-                                `;
-
-                            })
-                            .join("")
-                        }
-
-                    </tbody>
-
-                </table>
-
-            </div>
+         <b>
+          ${esc(team.name||"-")}
+         </b>
 
         </div>
 
-    `;
+       </td>
 
+       <td>${all.played??0}</td>
+       <td>${all.win??0}</td>
+       <td>${all.draw??0}</td>
+       <td>${all.lose??0}</td>
+
+       <td>${goals.for??0}</td>
+       <td>${goals.against??0}</td>
+
+       <td>
+        ${row.goalsDiff??0}
+       </td>
+
+       <td>
+        <b>${row.points??0}</b>
+       </td>
+
+      </tr>`;
+     }).join("")}
+
+    </tbody>
+
+   </table>
+
+  </div>
+
+ </div>`;
 }
 
+/* ================= GLOBAL SEARCH ================= */
 
-/* =====================================================
-   GLOBAL SEARCH
-===================================================== */
+$("globalSearch").addEventListener("keydown",e=>{
+ if(e.key==="Enter"){
+  const value=e.target.value.trim();
+  if(!value)return;
 
-$("globalSearch")
-.addEventListener(
-    "keydown",
-    e=>{
+  $("searchInput").value=value;
+  showPage("search");
+  doSearch();
+ }
+});
 
-        if(e.key === "Enter"){
-
-            const value =
-                e.target.value.trim();
-
-            if(!value){
-                return;
-            }
-
-            $("searchInput").value =
-                value;
-
-            showPage("search");
-
-            doSearch();
-
-        }
-
-    }
-);
-
-
-$("searchInput")
-.addEventListener(
-    "keydown",
-    e=>{
-
-        if(e.key === "Enter"){
-            doSearch();
-        }
-
-    }
-);
-
+$("searchInput").addEventListener("keydown",e=>{
+ if(e.key==="Enter")doSearch();
+});
 
 async function doSearch(){
 
-    const search =
-        $("searchInput")
-        .value
-        .trim();
+ const search=$("searchInput").value.trim();
+ const type=$("searchType").value;
 
-    const type =
-        $("searchType")
-        .value;
+ if(!search){
+  $("searchResults").innerHTML=empty("Arama kelimesi yaz.");
+  return;
+ }
 
-    if(!search){
+ $("searchResults").innerHTML=loading();
 
-        $("searchResults").innerHTML =
-            empty(
-                "Arama kelimesi yaz."
-            );
+ try{
 
-        return;
+  if(type==="teams"){
+   await searchTeams(search);
+  }
+  else if(type==="players"){
+   await searchPlayers(search);
+  }
+  else{
+   await searchLeagueResults(search);
+  }
 
-    }
-
-    $("searchResults").innerHTML =
-        loading();
-
-    try{
-
-        if(type === "teams"){
-
-            await searchTeams(
-                search
-            );
-
-        }
-        else if(type === "players"){
-
-            await searchPlayers(
-                search
-            );
-
-        }
-        else{
-
-            await searchLeagueResults(
-                search
-            );
-
-        }
-
-    }
-    catch(error){
-
-        $("searchResults").innerHTML =
-            empty(
-                "Arama hatası: " +
-                error.message
-            );
-
-    }
-
+ }
+ catch(error){
+  $("searchResults").innerHTML=
+   empty("Arama hatası: "+error.message);
+ }
 }
 
-
-/* =====================================================
-   TEAM SEARCH
-===================================================== */
+/* ================= TEAM SEARCH ================= */
 
 async function searchTeams(search){
 
-    const data =
-        await api(
-            API +
-            "/teams?search=" +
-            encodeURIComponent(search)
-        );
+ const data=await api(
+  API+"/teams?search="+encodeURIComponent(search)
+ );
 
-    const results =
-        data.response || [];
+ const results=data.response||[];
 
-    if(!results.length){
+ if(!results.length){
+  $("searchResults").innerHTML=empty("Takım bulunamadı.");
+  return;
+ }
 
-        $("searchResults").innerHTML =
-            empty(
-                "Takım bulunamadı."
-            );
+ $("searchResults").innerHTML=`
+ <div class="search-results">
 
-        return;
+ ${results.map(item=>{
 
-    }
+  const team=item.team||{};
+  const venue=item.venue||{};
 
-    $("searchResults").innerHTML =
-        `<div class="search-results">` +
-        results.map(item=>{
+  return `
 
-            const team =
-                item.team || {};
+  <div class="search-result"
+   onclick="openTeam(${team.id})">
 
-            const venue =
-                item.venue || {};
+   ${
+    team.logo
+    ? `<img src="${esc(team.logo)}">`
+    : "⚽"
+   }
 
-            return `
+   <div class="search-result-info">
 
-                <div
-                    class="search-result"
-                    onclick="
-                        openTeam(${team.id})
-                    "
-                >
+    <div class="search-result-title">
+     ${esc(team.name)}
+    </div>
 
-                    ${
-                        team.logo
-                        ? `
-                        <img
-                            src="${esc(
-                                team.logo
-                            )}"
-                        >
-                        `
-                        : "⚽"
-                    }
+    <div class="search-result-sub">
+     ${esc(team.country||"")}
+     ${venue.name?" · "+esc(venue.name):""}
+    </div>
 
-                    <div class="search-result-info">
+   </div>
 
-                        <div class="search-result-title">
-                            ${esc(
-                                team.name
-                            )}
-                        </div>
+  </div>`;
+ }).join("")}
 
-                        <div class="search-result-sub">
-
-                            ${esc(
-                                team.country ||
-                                ""
-                            )}
-
-                            ${
-                                venue.name
-                                ? " · " +
-                                  esc(
-                                      venue.name
-                                  )
-                                : ""
-                            }
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            `;
-
-        }).join("") +
-        `</div>`;
-
+ </div>`;
 }
 
-
-/* =====================================================
-   PLAYER SEARCH
-===================================================== */
+/* ================= PLAYER SEARCH ================= */
 
 async function searchPlayers(search){
 
-    const data =
-        await api(
-            API +
-            "/players?search=" +
-            encodeURIComponent(search)
-        );
+ const data=await api(
+  API+"/players?search="+encodeURIComponent(search)
+ );
 
-    const results =
-        data.response || [];
+ const results=data.response||[];
 
-    if(!results.length){
+ if(!results.length){
+  $("searchResults").innerHTML=empty("Oyuncu bulunamadı.");
+  return;
+ }
 
-        $("searchResults").innerHTML =
-            empty(
-                "Oyuncu bulunamadı."
-            );
+ $("searchResults").innerHTML=`
+ <div class="search-results">
 
-        return;
+ ${results.map(item=>{
 
-    }
+  const player=item.player||{};
+  const statistics=item.statistics?.[0];
+  const team=statistics?.team;
 
-    $("searchResults").innerHTML =
-        `<div class="search-results">` +
-        results.map(item=>{
+  return `
 
-            const player =
-                item.player || {};
+  <div class="search-result"
+   onclick="openPlayer(${player.id})">
 
-            const statistics =
-                item.statistics?.[0];
+   ${
+    player.photo
+    ? `<img src="${esc(player.photo)}">`
+    : "👤"
+   }
 
-            const team =
-                statistics?.team;
+   <div class="search-result-info">
 
-            return `
+    <div class="search-result-title">
+     ${esc(player.name)}
+    </div>
 
-                <div
-                    class="search-result"
-                    onclick="
-                        openPlayer(${player.id})
-                    "
-                >
+    <div class="search-result-sub">
 
-                    ${
-                        player.photo
-                        ? `
-                        <img
-                            src="${esc(
-                                player.photo
-                            )}"
-                        >
-                        `
-                        : "👤"
-                    }
+     ${team?.name?esc(team.name):""}
 
-                    <div class="search-result-info">
+     ${
+      player.nationality
+      ? " · "+esc(player.nationality)
+      : ""
+     }
 
-                        <div class="search-result-title">
-                            ${esc(
-                                player.name
-                            )}
-                        </div>
+    </div>
 
-                        <div class="search-result-sub">
+   </div>
 
-                            ${
-                                team?.name
-                                ? esc(
-                                    team.name
-                                  )
-                                : ""
-                            }
+  </div>`;
+ }).join("")}
 
-                            ${
-                                player.nationality
-                                ? " · " +
-                                  esc(
-                                      player.nationality
-                                  )
-                                : ""
-                            }
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            `;
-
-        }).join("") +
-        `</div>`;
-
+ </div>`;
 }
 
-
-/* =====================================================
-   LEAGUE SEARCH FOR GLOBAL SEARCH
-===================================================== */
+/* ================= GLOBAL LEAGUE SEARCH ================= */
 
 async function searchLeagueResults(search){
 
-    const data =
-        await api(
-            API +
-            "/leagues?search=" +
-            encodeURIComponent(search)
-        );
+ const data=await api(
+  API+"/leagues?search="+encodeURIComponent(search)
+ );
 
-    const results =
-        data.response || [];
+ const results=data.response||[];
 
-    if(!results.length){
+ if(!results.length){
+  $("searchResults").innerHTML=empty("Lig bulunamadı.");
+  return;
+ }
 
-        $("searchResults").innerHTML =
-            empty(
-                "Lig bulunamadı."
-            );
+ $("searchResults").innerHTML=`
+ <div class="search-results">
 
-        return;
+ ${results.map(item=>{
 
-    }
+  const league=item.league||{};
+  const country=item.country||{};
 
-    $("searchResults").innerHTML =
-        `<div class="search-results">` +
-        results.map(item=>{
+  return `
 
-            const league =
-                item.league || {};
+  <div class="search-result"
+   onclick="selectLeague(${league.id})">
 
-            const country =
-                item.country || {};
+   ${
+    league.logo
+    ? `<img src="${esc(league.logo)}">`
+    : "🏆"
+   }
 
-            return `
+   <div class="search-result-info">
 
-                <div
-                    class="search-result"
-                    onclick="
-                        selectLeague(
-                            ${league.id},
-                            '${esc(
-                                league.name
-                            )}'
-                        )
-                    "
-                >
+    <div class="search-result-title">
+     ${esc(league.name)}
+    </div>
 
-                    ${
-                        league.logo
-                        ? `
-                        <img
-                            src="${esc(
-                                league.logo
-                            )}"
-                        >
-                        `
-                        : "🏆"
-                    }
+    <div class="search-result-sub">
+     ${esc(country.name||"")}
+     · ID: ${league.id}
+    </div>
 
-                    <div class="search-result-info">
+   </div>
 
-                        <div class="search-result-title">
-                            ${esc(
-                                league.name
-                            )}
-                        </div>
+  </div>`;
+ }).join("")}
 
-                        <div class="search-result-sub">
-
-                            ${esc(
-                                country.name ||
-                                ""
-                            )}
-
-                            · ID:
-                            ${league.id}
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            `;
-
-        }).join("") +
-        `</div>`;
-
+ </div>`;
 }
 
-
-/* =====================================================
-   TEAM DETAIL
-===================================================== */
+/* ================= TEAM DETAIL ================= */
 
 async function openTeam(id){
 
-    if(!id){
-        return;
-    }
+ if(!id)return;
 
-    showPage("team");
+ showPage("team");
+ $("teamContainer").innerHTML=loading();
 
-    $("teamContainer").innerHTML =
-        loading();
+ try{
 
-    try{
+  const [teamData,squadData]=await Promise.all([
 
-        const [
-            teamData,
-            squadData
-        ] = await Promise.all([
+   api(API+"/team/"+id),
 
-            api(
-                API +
-                "/team/" +
-                id
-            ),
+   api(API+"/team/"+id+"/squad")
 
-            api(
-                API +
-                "/team/" +
-                id +
-                "/squad"
-            )
+  ]);
 
-        ]);
+  renderTeam(teamData,squadData);
 
-        renderTeam(
-            teamData,
-            squadData
-        );
+ }
+ catch(error){
 
-    }
-    catch(error){
+  $("teamContainer").innerHTML=
+   empty("Takım yüklenemedi: "+error.message);
 
-        $("teamContainer").innerHTML =
-            empty(
-                "Takım yüklenemedi: " +
-                error.message
-            );
-
-    }
-
+ }
 }
 
+function renderTeam(teamData,squadData){
 
-function renderTeam(
-    teamData,
-    squadData
-){
+ const item=teamData.response?.[0];
 
-    const item =
-        teamData.response?.[0];
+ if(!item){
+  $("teamContainer").innerHTML=empty("Takım bulunamadı.");
+  return;
+ }
 
-    if(!item){
+ const team=item.team||{};
+ const venue=item.venue||{};
 
-        $("teamContainer").innerHTML =
-            empty(
-                "Takım bulunamadı."
-            );
+ const squads=squadData.response||[];
 
-        return;
+ let players=[];
 
+ squads.forEach(group=>{
+  if(Array.isArray(group.players)){
+   players.push(...group.players);
+  }
+ });
+
+ $("teamContainer").innerHTML=`
+
+ <div class="panel">
+
+  <div class="profile">
+
+   ${
+    team.logo
+    ? `<img class="profile-logo" src="${esc(team.logo)}">`
+    : ""
+   }
+
+   <div>
+
+    <h2>${esc(team.name)}</h2>
+
+    <p>
+     ${esc(team.country||"")}
+     ${team.founded?" · "+team.founded:""}
+    </p>
+
+    ${
+     venue.name
+     ? `<p style="margin-top:5px">
+        🏟️ ${esc(venue.name)}
+       </p>`
+     : ""
     }
 
-    const team =
-        item.team || {};
+   </div>
 
-    const venue =
-        item.venue || {};
+  </div>
 
-    const squads =
-        squadData.response || [];
+ </div>
 
-    let players = [];
+ <div class="panel" style="margin-top:16px">
 
-    squads.forEach(group=>{
+  <div class="panel-head">
 
-        if(
-            Array.isArray(
-                group.players
-            )
-        ){
+   <h3>👤 Kadro</h3>
 
-            players.push(
-                ...group.players
-            );
+   <span style="color:var(--muted);font-size:11px">
+    ${players.length} oyuncu
+   </span>
 
-        }
+  </div>
 
-    });
+  <div class="table-wrap">
 
+   <table>
 
-    $("teamContainer").innerHTML = `
+    <thead>
+     <tr>
+      <th>Oyuncu</th>
+      <th>Numara</th>
+      <th>Mevki</th>
+     </tr>
+    </thead>
 
-        <div class="panel">
+    <tbody>
 
-            <div class="profile">
+     ${
+      players.map(player=>`
 
-                ${
-                    team.logo
-                    ? `
-                    <img
-                        class="profile-logo"
-                        src="${esc(
-                            team.logo
-                        )}"
-                    >
-                    `
-                    : ""
-                }
+      <tr
+       style="cursor:pointer"
+       onclick="openPlayer(${player.id})"
+      >
 
-                <div>
+       <td>
 
-                    <h2>
-                        ${esc(
-                            team.name
-                        )}
-                    </h2>
+        <div class="club-cell">
 
-                    <p>
-                        ${esc(
-                            team.country ||
-                            ""
-                        )}
+         ${
+          player.photo
+          ? `<img
+             src="${esc(player.photo)}"
+             style="width:35px;height:35px;border-radius:50%"
+            >`
+          : ""
+         }
 
-                        ${
-                            team.founded
-                            ? " · " +
-                              team.founded
-                            : ""
-                        }
-                    </p>
-
-                    ${
-                        venue.name
-                        ? `
-                        <p style="margin-top:5px">
-                            🏟️ ${esc(
-                                venue.name
-                            )}
-                        </p>
-                        `
-                        : ""
-                    }
-
-                </div>
-
-            </div>
+         <b>
+          ${esc(player.name)}
+         </b>
 
         </div>
 
+       </td>
 
-        <div class="panel" style="margin-top:16px">
+       <td>
+        ${player.number??"-"}
+       </td>
 
-            <div class="panel-head">
+       <td>
+        ${esc(player.pos||"-")}
+       </td>
 
-                <h3>
-                    👤 Kadro
-                </h3>
+      </tr>
 
-                <span style="
-                    color:var(--muted);
-                    font-size:11px
-                ">
-                    ${players.length} oyuncu
-                </span>
+      `).join("")
+     }
 
-            </div>
+    </tbody>
 
-            <div class="table-wrap">
+   </table>
 
-                <table>
+  </div>
 
-                    <thead>
-
-                        <tr>
-                            <th>Oyuncu</th>
-                            <th>Numara</th>
-                            <th>Mevki</th>
-                        </tr>
-
-                    </thead>
-
-                    <tbody>
-
-                        ${
-                            players.map(player=>{
-
-                                return `
-
-                                    <tr
-                                        style="cursor:pointer"
-                                        onclick="
-                                            openPlayer(
-                                                ${player.id}
-                                            )
-                                        "
-                                    >
-
-                                        <td>
-
-                                            <div class="club-cell">
-
-                                                ${
-                                                    player.photo
-                                                    ? `
-                                                    <img
-                                                        src="${esc(
-                                                            player.photo
-                                                        )}"
-                                                        style="
-                                                            width:35px;
-                                                            height:35px;
-                                                            border-radius:50%;
-                                                        "
-                                                    >
-                                                    `
-                                                    : ""
-                                                }
-
-                                                <b>
-                                                    ${esc(
-                                                        player.name
-                                                    )}
-                                                </b>
-
-                                            </div>
-
-                                        </td>
-
-                                        <td>
-                                            ${player.number ?? "-"}
-                                        </td>
-
-                                        <td>
-                                            ${esc(
-                                                player.pos ||
-                                                "-"
-                                            )}
-                                        </td>
-
-                                    </tr>
-
-                                `;
-
-                            }).join("")
-                        }
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
-    `;
-
+ </div>`;
 }
 
-
-/* =====================================================
-   PLAYER DETAIL
-===================================================== */
+/* ================= PLAYER DETAIL ================= */
 
 async function openPlayer(id){
 
-    if(!id){
-        return;
-    }
+ if(!id)return;
 
-    showPage("player");
+ showPage("player");
+ $("playerContainer").innerHTML=loading();
 
-    $("playerContainer").innerHTML =
-        loading();
+ try{
 
-    try{
+  const data=await api(
+   API+
+   "/player/"+
+   id+
+   "?season="+
+   new Date().getFullYear()
+  );
 
-        const data =
-            await api(
-                API +
-                "/player/" +
-                id +
-                "?season=" +
-                new Date().getFullYear()
-            );
+  renderPlayer(data);
 
-        renderPlayer(
-            data
-        );
+ }
+ catch(error){
 
-    }
-    catch(error){
+  $("playerContainer").innerHTML=
+   empty("Oyuncu yüklenemedi: "+error.message);
 
-        $("playerContainer").innerHTML =
-            empty(
-                "Oyuncu yüklenemedi: " +
-                error.message
-            );
-
-    }
-
+ }
 }
-
 
 function renderPlayer(data){
 
-    const item =
-        data.response?.[0];
+ const item=data.response?.[0];
 
-    if(!item){
+ if(!item){
+  $("playerContainer").innerHTML=
+   empty("Oyuncu bulunamadı.");
+  return;
+ }
 
-        $("playerContainer").innerHTML =
-            empty(
-                "Oyuncu bulunamadı."
-            );
+ const player=item.player||{};
+ const stats=item.statistics||[];
 
-        return;
+ const appearances=stats.reduce(
+  (a,s)=>a+(s.games?.appearences||0),0
+ );
 
+ const goals=stats.reduce(
+  (a,s)=>a+(s.goals?.total||0),0
+ );
+
+ const assists=stats.reduce(
+  (a,s)=>a+(s.goals?.assists||0),0
+ );
+
+ const yellow=stats.reduce(
+  (a,s)=>a+(s.cards?.yellow||0),0
+ );
+
+ $("playerContainer").innerHTML=`
+
+ <div class="panel">
+
+  <div class="profile">
+
+   ${
+    player.photo
+    ? `<img class="profile-logo" src="${esc(player.photo)}">`
+    : ""
+   }
+
+   <div>
+
+    <h2>${esc(player.name)}</h2>
+
+    <p>
+     ${esc(player.nationality||"")}
+     ${player.age?" · "+player.age+" yaş":""}
+    </p>
+
+    ${
+     player.birth?.date
+     ? `<p style="margin-top:5px">
+        🎂 ${esc(player.birth.date)}
+       </p>`
+     : ""
     }
 
-    const player =
-        item.player || {};
+   </div>
 
-    const stats =
-        item.statistics || [];
+  </div>
 
-    $("playerContainer").innerHTML = `
+ </div>
 
-        <div class="panel">
+ <div class="grid grid-4" style="margin-top:16px">
 
-            <div class="profile">
+  ${createPlayerStat("Maç",appearances)}
+  ${createPlayerStat("Gol",goals)}
+  ${createPlayerStat("Asist",assists)}
+  ${createPlayerStat("Sarı Kart",yellow)}
 
-                ${
-                    player.photo
-                    ? `
-                    <img
-                        class="profile-logo"
-                        src="${esc(
-                            player.photo
-                        )}"
-                    >
-                    `
-                    : ""
-                }
+ </div>
 
-                <div>
+ <div class="panel" style="margin-top:16px">
 
-                    <h2>
-                        ${esc(
-                            player.name
-                        )}
-                    </h2>
+  <div class="panel-head">
+   <h3>📊 Sezon İstatistikleri</h3>
+  </div>
 
-                    <p>
-                        ${esc(
-                            player.nationality ||
-                            ""
-                        )}
+  <div class="table-wrap">
 
-                        ${
-                            player.age
-                            ? " · " +
-                              player.age +
-                              " yaş"
-                            : ""
-                        }
-                    </p>
+   <table>
 
-                    ${
-                        player.birth?.date
-                        ? `
-                        <p style="margin-top:5px">
-                            🎂 ${esc(
-                                player.birth.date
-                            )}
-                        </p>
-                        `
-                        : ""
-                    }
+    <thead>
+     <tr>
+      <th>Lig</th>
+      <th>Takım</th>
+      <th>Maç</th>
+      <th>Gol</th>
+      <th>Asist</th>
+      <th>Rating</th>
+     </tr>
+    </thead>
 
-                </div>
+    <tbody>
 
-            </div>
+     ${
+      stats.map(stat=>`
 
-        </div>
+      <tr>
 
+       <td>
+        ${esc(stat.league?.name||"-")}
+       </td>
 
-        <div class="grid grid-4" style="margin-top:16px">
+       <td>
+        ${esc(stat.team?.name||"-")}
+       </td>
 
-            ${
-                createPlayerStat(
-                    "Maç",
-                    stats.reduce(
-                        (a,s)=>
-                            a +
-                            (s.games?.appearences || 0),
-                        0
-                    )
-                )
-            }
+       <td>
+        ${stat.games?.appearences??0}
+       </td>
 
-            ${
-                createPlayerStat(
-                    "Gol",
-                    stats.reduce(
-                        (a,s)=>
-                            a +
-                            (s.goals?.total || 0),
-                        0
-                    )
-                )
-            }
+       <td>
+        ${stat.goals?.total??0}
+       </td>
 
-            ${
-                createPlayerStat(
-                    "Asist",
-                    stats.reduce(
-                        (a,s)=>
-                            a +
-                            (s.goals?.assists || 0),
-                        0
-                    )
-                )
-            }
+       <td>
+        ${stat.goals?.assists??0}
+       </td>
 
-            ${
-                createPlayerStat(
-                    "Sarı Kart",
-                    stats.reduce(
-                        (a,s)=>
-                            a +
-                            (s.cards?.yellow || 0),
-                        0
-                    )
-                )
-            }
+       <td>
+        ${stat.games?.rating??"-"}
+       </td>
 
-        </div>
+      </tr>
 
+      `).join("")
+     }
 
-        <div class="panel" style="margin-top:16px">
+    </tbody>
 
-            <div class="panel-head">
+   </table>
 
-                <h3>
-                    📊 Sezon İstatistikleri
-                </h3>
+  </div>
 
-            </div>
-
-            <div class="table-wrap">
-
-                <table>
-
-                    <thead>
-
-                        <tr>
-                            <th>Lig</th>
-                            <th>Takım</th>
-                            <th>Maç</th>
-                            <th>Gol</th>
-                            <th>Asist</th>
-                            <th>Rating</th>
-                        </tr>
-
-                    </thead>
-
-                    <tbody>
-
-                        ${
-                            stats.map(stat=>{
-
-                                return `
-
-                                    <tr>
-
-                                        <td>
-                                            ${esc(
-                                                stat.league?.name ||
-                                                "-"
-                                            )}
-                                        </td>
-
-                                        <td>
-                                            ${esc(
-                                                stat.team?.name ||
-                                                "-"
-                                            )}
-                                        </td>
-
-                                        <td>
-                                            ${stat.games?.appearences ?? 0}
-                                        </td>
-
-                                        <td>
-                                            ${stat.goals?.total ?? 0}
-                                        </td>
-
-                                        <td>
-                                            ${stat.goals?.assists ?? 0}
-                                        </td>
-
-                                        <td>
-                                            ${stat.games?.rating ?? "-"}
-                                        </td>
-
-                                    </tr>
-
-                                `;
-
-                            }).join("")
-                        }
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
-    `;
-
+ </div>`;
 }
 
+function createPlayerStat(label,value){
 
-function createPlayerStat(
-    label,
-    value
-){
+ return `
+ <div class="stat-card">
 
-    return `
+  <div class="stat-label">
+   ${esc(label)}
+  </div>
 
-        <div class="stat-card">
+  <div class="stat-value">
+   ${esc(value)}
+  </div>
 
-            <div class="stat-label">
-                ${esc(label)}
-            </div>
-
-            <div class="stat-value">
-                ${esc(value)}
-            </div>
-
-        </div>
-
-    `;
-
+ </div>`;
 }
 
+/* ================= KEYBOARD ================= */
 
-/* =====================================================
-   KEYBOARD SHORTCUT
-===================================================== */
+document.addEventListener("keydown",e=>{
 
-document.addEventListener(
-    "keydown",
-    e=>{
+ if(
+  e.key==="/" &&
+  document.activeElement.tagName!=="INPUT"
+ ){
 
-        if(
-            e.key === "/" &&
-            document.activeElement.tagName !== "INPUT"
-        ){
+  e.preventDefault();
+  $("globalSearch").focus();
 
-            e.preventDefault();
+ }
 
-            $("globalSearch").focus();
+ if(e.key==="Escape"){
+  $("globalSearch").blur();
+ }
 
-        }
+});
 
-        if(
-            e.key === "Escape"
-        ){
+/* ================= DETAIL AUTO REFRESH ================= */
 
-            $("globalSearch").blur();
+setInterval(async()=>{
 
-        }
+ if(
+  currentPage==="detail" &&
+  currentDetailId
+ ){
 
-    }
-);
+  try{
 
+   const data=await api(
+    API+"/fixture/"+currentDetailId
+   );
 
-/* =====================================================
-   FIXTURE DETAIL AUTO REFRESH
-===================================================== */
+   const fixture=data.response?.[0];
 
-setInterval(
-    async ()=>{
+   if(!fixture)return;
 
-        if(
-            currentPage === "detail" &&
-            currentDetailId
-        ){
+   const score=document.querySelector(".big-score");
 
-            try{
+   if(score){
 
-                const data =
-                    await api(
-                        API +
-                        "/fixture/" +
-                        currentDetailId
-                    );
+    score.textContent=
+     `${fixture.goals?.home??0} - ${fixture.goals?.away??0}`;
 
-                const fixture =
-                    data.response?.[0];
+   }
 
-                if(!fixture){
-                    return;
-                }
+  }
+  catch{}
 
-                /*
-                  Canlı detay ekranında skorun
-                  daima güncel kalmasını sağlıyoruz.
-                */
+ }
 
-                const score =
-                    document.querySelector(
-                        ".big-score"
-                    );
-
-                if(score){
-
-                    score.textContent =
-                        `${fixture.goals?.home ?? 0} - ${fixture.goals?.away ?? 0}`;
-
-                }
-
-            }
-            catch{
-
-                // sessiz geç
-
-            }
-
-        }
-
-    },
-    15000
-);
-
-
-/* =====================================================
-   INITIAL
-===================================================== */
+},15000);
 
 console.log(
-    "%c⚽ GOALHUB PRO",
-    "color:#20d47a;font-size:20px;font-weight:900"
+ "%c⚽ GOALHUB PRO",
+ "color:#20d47a;font-size:20px;font-weight:900"
 );
 
-console.log(
-    "✓ Live"
-);
-
-console.log(
-    "✓ Goals"
-);
-
-console.log(
-    "✓ Cards"
-);
-
-console.log(
-    "✓ Substitutions"
-);
-
-console.log(
-    "✓ Statistics"
-);
-
-console.log(
-    "✓ Leagues"
-);
-
-console.log(
-    "✓ Teams"
-);
-
-console.log(
-    "✓ Players"
-);
-
-console.log(
-    "✓ Fixtures"
-);
-
-console.log(
-    "✓ Standings"
-);
-
-console.log(
-    "✓ Match Details"
-);
-
-console.log(
-    "✓ Mobile"
-);
+console.log("✓ Live");
+console.log("✓ Goals");
+console.log("✓ Cards");
+console.log("✓ Substitutions");
+console.log("✓ Statistics");
+console.log("✓ Leagues");
+console.log("✓ Teams");
+console.log("✓ Players");
+console.log("✓ Fixtures");
+console.log("✓ Standings");
+console.log("✓ Match Details");
+console.log("✓ Mobile");
+console.log("✓ Puan Durumu");
 
 </script>
 
