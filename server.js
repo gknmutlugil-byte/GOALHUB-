@@ -1068,7 +1068,103 @@ app.post(
     }
 );
 
-/* =========================================================
+/* =============================/* =========================================================
+   TEST PUSH NOTIFICATION
+========================================================= */
+
+app.get(
+    "/api/push/test",
+    async (req, res) => {
+
+        let sent = 0;
+        let failed = 0;
+
+        for (
+            const item
+            of subscriptions.values()
+        ) {
+
+            try {
+
+                await webpush.sendNotification(
+                    item.subscription,
+                    JSON.stringify({
+
+                        title:
+                            "⚽ GOALHUB TEST",
+
+                        body:
+                            "Bildirim sistemi çalışıyor! 🔔",
+
+                        icon:
+                            "/icon-192.png",
+
+                        badge:
+                            "/icon-192.png",
+
+                        tag:
+                            "goalhub-test-" +
+                            Date.now(),
+
+                        renotify:
+                            true,
+
+                        data: {
+                            url: "/"
+                        }
+
+                    })
+                );
+
+                sent++;
+
+                console.log(
+                    "🔔 TEST BİLDİRİMİ GÖNDERİLDİ"
+                );
+
+            } catch (error) {
+
+                failed++;
+
+                console.error(
+                    "❌ TEST PUSH ERROR:",
+                    error.statusCode,
+                    error.message
+                );
+
+                if (
+                    error.statusCode === 404 ||
+                    error.statusCode === 410
+                ) {
+
+                    subscriptions.delete(
+                        item.subscription.endpoint
+                    );
+
+                }
+
+            }
+
+        }
+
+        res.json({
+
+            ok: true,
+
+            message:
+                "Test bildirimi gönderildi.",
+
+            sent,
+
+            failed,
+
+            subscriptions:
+                subscriptions.size
+
+        });
+
+    }
+);============================
    SEND GOAL NOTIFICATION
 ========================================================= */
 
