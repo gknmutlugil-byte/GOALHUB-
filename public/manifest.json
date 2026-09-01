@@ -1,0 +1,16 @@
+{
+  "name": "GOALHUB PRO",
+  "short_name": "GOALHUB",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#070b12",
+  "theme_color": "#20d47a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
