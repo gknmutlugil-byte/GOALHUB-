@@ -1,10 +1,12 @@
-const CACHE_NAME = "goalhub-pro-v1";
+const CACHE_NAME = "goalhub-pro-v2";
+
+const BASE_PATH = "/GOALHUB-";
 
 const APP_FILES = [
-  "/",
-  "/index.html",
-  "/manifest.json",
-  "/icon-192.png"
+  BASE_PATH + "/",
+  BASE_PATH + "/index.html",
+  BASE_PATH + "/manifest.json",
+  BASE_PATH + "/icon-192.png"
 ];
 
 self.addEventListener("install", event => {
@@ -17,29 +19,49 @@ self.addEventListener("install", event => {
 
 self.addEventListener("activate", event => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys
-          .filter(key => key !== CACHE_NAME)
-          .map(key => caches.delete(key))
+    caches.keys()
+      .then(keys =>
+        Promise.all(
+          keys
+            .filter(key => key !== CACHE_NAME)
+            .map(key => caches.delete(key))
+        )
       )
-    ).then(() => self.clients.claim())
+      .then(() => self.clients.claim())
   );
 });
 
 self.addEventListener("fetch", event => {
+  if (event.request.method !== "GET") {
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then(response => {
-        if (response && response.status === 200) {
+
+        if (
+          response &&
+          response.status === 200 &&
+          response.type !== "opaque"
+        ) {
           const copy = response.clone();
 
           caches.open(CACHE_NAME)
-            .then(cache => cache.put(event.request, copy));
+            .then(cache => {
+              cache.put(event.request, copy);
+            });
         }
 
         return response;
       })
-      .catch(() => caches.match(event.request))
+      .catch(() => {
+        return caches.match(event.request)
+          .then(cached => {
+            return cached || caches.match(
+              BASE_PATH + "/index.html"
+            );
+          });
+      })
   );
 });
