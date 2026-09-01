@@ -1,14 +1,17 @@
+
 {
   "name": "GOALHUB PRO",
   "short_name": "GOALHUB",
-  "start_url": "/",
+  "description": "GOALHUB PRO ile canlı maçları, fikstürleri, puan durumlarını, ligleri, takımları ve oyuncuları takip edin.",
+  "start_url": "/GOALHUB-/",
+  "scope": "/GOALHUB-/",
   "display": "standalone",
   "background_color": "#070b12",
   "theme_color": "#20d47a",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "/GOALHUB-/icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     }
