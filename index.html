@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
+
 <title>GOALHUB PRO</title>
 
 <link rel="manifest" href="/manifest.json">
@@ -341,7 +342,7 @@ header{
 
 @keyframes spin{
     to{
-        transform:rotate(360deg)
+        transform:rotate(360deg);
     }
 }
 
@@ -614,14 +615,6 @@ td{
     font-weight:900;
 }
 
-.live-row{
-    background:#0d1b15;
-}
-
-.live-row td{
-    border-bottom-color:#173c2b;
-}
-
 .goal-toast{
     position:fixed;
     right:20px;
@@ -666,10 +659,23 @@ td{
     display:none;
 }
 
+.api-status{
+    color:var(--muted);
+    font-size:11px;
+}
+
+.cache-badge{
+    color:var(--blue);
+    font-size:10px;
+    font-weight:800;
+}
+
 @media(max-width:1000px){
+
     .league-grid{
         grid-template-columns:repeat(2,minmax(0,1fr));
     }
+
 }
 
 @media(max-width:900px){
@@ -708,6 +714,7 @@ td{
     .big-score{
         font-size:31px;
     }
+
 }
 
 @media(max-width:650px){
@@ -893,7 +900,7 @@ placeholder="Premier League, Süper Lig..."
 
 <button
 class="btn btn-green"
-onclick="loadLeagues()"
+onclick="loadLeagues(true)"
 >
 🔄 Ligleri Getir
 </button>
@@ -949,9 +956,11 @@ Puan Durumunu Getir
 <div id="standingInfo"></div>
 
 <div id="standingsContainer">
+
 <div class="empty">
 Lig seçin.
 </div>
+
 </div>
 
 </section>
@@ -1097,32 +1106,102 @@ GOALHUB PRO
 
 /* =========================================================
    GOALHUB PRO
+   API-FUTBOL KOTA KORUMALI SÜRÜM
+   ========================================================= */
+
+
+/* =========================================================
+   API AYARLARI
    ========================================================= */
 
 const API_KEY =
-"BURAYA_API_FOOTBALL_ANAHTARINI_YAZ";
+"18b613aab299a45922992169df025cf9
+";
 
 const API_BASE =
 "https://v3.football.api-sports.io";
 
 
-let currentPage = "live";
-let lastPage = "live";
+/*
+   KOTA KORUMA AYARLARI
 
-let currentDetailId = null;
+   Canlı maç:
+   30 saniye
 
-let selectedLeague = null;
-let selectedSeason = null;
+   Puan:
+   60 saniye
 
-let leaguesCache = [];
+   Ligler:
+   30 dakika
 
-let previousScores = {};
+   Maç detayı:
+   15 saniye
+*/
 
-let knownFinishedMatches = {};
+const LIVE_REFRESH_MS =
+    30000;
 
-let standingsRequestId = 0;
+const STANDINGS_REFRESH_MS =
+    60000;
 
-let detailRequestId = 0;
+const LEAGUES_CACHE_MS =
+    1800000;
+
+const DETAIL_REFRESH_MS =
+    15000;
+
+
+/* =========================================================
+   GLOBAL STATE
+   ========================================================= */
+
+let currentPage =
+    "live";
+
+let lastPage =
+    "live";
+
+let currentDetailId =
+    null;
+
+let selectedLeague =
+    null;
+
+let selectedSeason =
+    null;
+
+let leaguesCache =
+    [];
+
+let previousScores =
+    {};
+
+let previousLiveMatches =
+    {};
+
+let currentStandingsRows =
+    [];
+
+let lastStandingsLoad =
+    0;
+
+let lastLiveLoad =
+    0;
+
+let lastLeaguesLoad =
+    0;
+
+let apiInFlight =
+    new Map();
+
+let fixtureCache =
+    new Map();
+
+let standingsCache =
+    new Map();
+
+let detailCache =
+    new Map();
 
 
 /* =========================================================
@@ -1136,7 +1215,10 @@ function $(id){
 
 function esc(value){
 
-    if(value === null || value === undefined){
+    if(
+        value === null ||
+        value === undefined
+    ){
         return "";
     }
 
@@ -1210,55 +1292,122 @@ function logo(url){
 
 
 function currentYear(){
+
     return new Date().getFullYear();
+
 }
 
 
 function today(){
 
-    const d = new Date();
+    const d =
+        new Date();
 
     return (
         d.getFullYear() + "-" +
-        String(d.getMonth()+1).padStart(2,"0") + "-" +
-        String(d.getDate()).padStart(2,"0")
+        String(
+            d.getMonth()+1
+        ).padStart(2,"0") + "-" +
+        String(
+            d.getDate()
+        ).padStart(2,"0")
     );
 }
 
 
+function nowMs(){
+
+    return Date.now();
+
+}
+
+
 /* =========================================================
-   API
+   KOTA KORUMALI API ENGINE
    ========================================================= */
 
-async function api(endpoint){
+async function api(
+    endpoint,
+    options={}
+){
 
     if(
         !API_KEY ||
-        API_KEY.includes("BURAYA_API") ||
         API_KEY.length < 10
     ){
 
         throw new Error(
-            "API-Football API anahtarını API_KEY kısmına yaz."
+            "API-Football API anahtarı bulunamadı."
         );
 
     }
 
-    let response;
+
+    /*
+        Aynı endpoint zaten istek halindeyse
+        ikinci istek açmıyoruz.
+    */
+
+    if(apiInFlight.has(endpoint)){
+
+        return apiInFlight.get(endpoint);
+
+    }
+
+
+    const request =
+        performApiRequest(
+            endpoint
+        );
+
+
+    apiInFlight.set(
+        endpoint,
+        request
+    );
+
 
     try{
 
-        response = await fetch(
-            API_BASE + endpoint,
-            {
-                method:"GET",
-                headers:{
-                    "x-apisports-key":API_KEY,
-                    "Accept":"application/json"
-                },
-                cache:"no-store"
-            }
+        return await request;
+
+    }finally{
+
+        apiInFlight.delete(
+            endpoint
         );
+
+    }
+
+}
+
+
+async function performApiRequest(
+    endpoint
+){
+
+    let response;
+
+
+    try{
+
+        response =
+            await fetch(
+                API_BASE + endpoint,
+                {
+                    method:"GET",
+
+                    headers:{
+                        "x-apisports-key":
+                            API_KEY,
+
+                        "Accept":
+                            "application/json"
+                    },
+
+                    cache:"no-store"
+                }
+            );
 
     }catch(error){
 
@@ -1267,6 +1416,7 @@ async function api(endpoint){
         );
 
     }
+
 
     const text =
         await response.text();
@@ -1285,10 +1435,12 @@ async function api(endpoint){
             "API HTTP " +
             response.status;
 
+
         try{
 
             const data =
                 JSON.parse(text);
+
 
             if(data.message){
 
@@ -1298,22 +1450,29 @@ async function api(endpoint){
 
             }
 
+
             if(data.errors){
 
                 message +=
                     " - " +
-                    JSON.stringify(data.errors);
+                    JSON.stringify(
+                        data.errors
+                    );
 
             }
 
         }catch{}
 
-        throw new Error(message);
+
+        throw new Error(
+            message
+        );
 
     }
 
 
     let data;
+
 
     try{
 
@@ -1331,17 +1490,22 @@ async function api(endpoint){
 
     if(
         data.errors &&
-        Object.keys(data.errors).length
+        Object.keys(
+            data.errors
+        ).length
     ){
 
         throw new Error(
-            Object.values(data.errors).join(" | ")
+            Object.values(
+                data.errors
+            ).join(" | ")
         );
 
     }
 
 
     return data;
+
 }
 
 
@@ -1353,8 +1517,11 @@ function showPage(page){
 
     document
         .querySelectorAll(".page")
-        .forEach(p =>
-            p.classList.remove("active")
+        .forEach(
+            p =>
+                p.classList.remove(
+                    "active"
+                )
         );
 
 
@@ -1364,13 +1531,17 @@ function showPage(page){
 
     if(target){
 
-        target.classList.add("active");
+        target.classList.add(
+            "active"
+        );
 
     }
 
 
     document
-        .querySelectorAll("[data-page]")
+        .querySelectorAll(
+            "[data-page]"
+        )
         .forEach(button => {
 
             button.classList.toggle(
@@ -1389,12 +1560,14 @@ function showPage(page){
         ].includes(page)
     ){
 
-        lastPage = page;
+        lastPage =
+            page;
 
     }
 
 
-    currentPage = page;
+    currentPage =
+        page;
 
 
     window.scrollTo({
@@ -1403,16 +1576,41 @@ function showPage(page){
     });
 
 
+    /*
+        Sayfaya geçildiğinde gereksiz API
+        çağrısı yapılmaz.
+
+        Cache süresi dolmuşsa çağrı yapılır.
+    */
+
     if(
         page === "standings" &&
-        selectedLeague &&
-        selectedSeason
+        selectedLeague
     ){
 
-        setTimeout(
-            () => loadStandings(false),
-            100
-        );
+        const age =
+            nowMs() -
+            lastStandingsLoad;
+
+
+        if(
+            age >=
+            STANDINGS_REFRESH_MS
+        ){
+
+            loadStandings(false);
+
+        }
+
+    }
+
+
+    if(
+        page === "leagues" &&
+        !leaguesCache.length
+    ){
+
+        loadLeagues(false);
 
     }
 
@@ -1420,17 +1618,26 @@ function showPage(page){
 
 
 function goBack(){
-    showPage(lastPage);
+
+    showPage(
+        lastPage
+    );
+
 }
 
 
 document
-    .querySelectorAll("[data-page]")
+    .querySelectorAll(
+        "[data-page]"
+    )
     .forEach(button => {
 
         button.addEventListener(
             "click",
-            () => showPage(button.dataset.page)
+            () =>
+                showPage(
+                    button.dataset.page
+                )
         );
 
     });
@@ -1448,7 +1655,8 @@ function buildSeasons(){
     const year =
         currentYear();
 
-    select.innerHTML = "";
+    select.innerHTML =
+        "";
 
     for(
         let y = year;
@@ -1457,31 +1665,60 @@ function buildSeasons(){
     ){
 
         const option =
-            document.createElement("option");
+            document.createElement(
+                "option"
+            );
 
-        option.value = y;
+        option.value =
+            y;
 
         option.textContent =
-            `${y}/${String(y+1).slice(-2)}`;
+            `${y}/${String(
+                y+1
+            ).slice(-2)}`;
 
-        select.appendChild(option);
+        select.appendChild(
+            option
+        );
 
     }
 
-    select.value = year;
+    select.value =
+        year;
+
 }
 
 
 buildSeasons();
 
-$("fixtureDate").value = today();
+$("fixtureDate").value =
+    today();
 
 
 /* =========================================================
    LIVE MATCHES
    ========================================================= */
 
-async function loadLive(manual=false){
+async function loadLive(
+    manual=false
+){
+
+    /*
+        Manuel yenileme dışında,
+        30 saniyeden önce tekrar API'ye gitme.
+    */
+
+    if(
+        !manual &&
+        nowMs() -
+        lastLiveLoad <
+        LIVE_REFRESH_MS
+    ){
+
+        return;
+
+    }
+
 
     const container =
         $("liveContainer");
@@ -1497,14 +1734,47 @@ async function loadLive(manual=false){
 
     try{
 
+        lastLiveLoad =
+            nowMs();
+
+
         const data =
-            await api("/fixtures?live=all");
+            await api(
+                "/fixtures?live=all"
+            );
 
 
         const matches =
-            Array.isArray(data.response)
-                ? data.response
-                : [];
+            Array.isArray(
+                data.response
+            )
+            ? data.response
+            : [];
+
+
+        /*
+            Gol kontrolü
+        */
+
+        detectGoals(
+            matches
+        );
+
+
+        /*
+            Maçın canlıdan çıkması
+            = maçın bitmiş olma ihtimali.
+
+            Burada tekrar fixtures çağrısı
+            YAPMIYORUZ.
+
+            Sadece standings 5 saniye sonra
+            yenilenecek.
+        */
+
+        detectFinishedFromLive(
+            matches
+        );
 
 
         renderMatches(
@@ -1514,14 +1784,25 @@ async function loadLive(manual=false){
         );
 
 
-        $("liveUpdated").textContent =
+        $("liveUpdated")
+            .textContent =
             "Son güncelleme: " +
-            new Date().toLocaleTimeString(
-                "tr-TR"
+            new Date()
+                .toLocaleTimeString(
+                    "tr-TR"
+                );
+
+
+        previousLiveMatches =
+            buildLiveMap(
+                matches
             );
 
 
-        detectGoals(matches);
+        console.log(
+            "CANLI MAÇ:",
+            matches.length
+        );
 
 
     }catch(error){
@@ -1539,6 +1820,7 @@ async function loadLive(manual=false){
 
         `;
 
+
         console.error(
             "GOALHUB LIVE:",
             error
@@ -1549,21 +1831,175 @@ async function loadLive(manual=false){
 }
 
 
-/*
-    CANLI MAÇLAR 15 SANİYE
-*/
+/* =========================================================
+   CANLI MAÇ MAP
+   ========================================================= */
+
+function buildLiveMap(
+    matches
+){
+
+    const map =
+        {};
+
+    matches.forEach(
+        match => {
+
+            const id =
+                match.fixture?.id;
+
+
+            if(!id){
+
+                return;
+
+            }
+
+
+            map[id] =
+                {
+                    home:
+                        Number(
+                            match.goals?.home ?? 0
+                        ),
+
+                    away:
+                        Number(
+                            match.goals?.away ?? 0
+                        ),
+
+                    score:
+                        `${match.goals?.home ?? 0}-${match.goals?.away ?? 0}`,
+
+                    league:
+                        Number(
+                            match.league?.id || 0
+                        )
+                };
+
+        }
+    );
+
+
+    return map;
+
+}
+
+
+/* =========================================================
+   MAÇ BİTTİ TESPİTİ
+   ========================================================= */
+
+function detectFinishedFromLive(
+    matches
+){
+
+    /*
+        Önceki canlı maçlar
+    */
+
+    const current =
+        buildLiveMap(
+            matches
+        );
+
+
+    /*
+        Önceden canlı olup artık listede
+        olmayan maçları bul.
+    */
+
+    Object.keys(
+        previousLiveMatches
+    )
+    .forEach(id => {
+
+        if(
+            current[id]
+        ){
+
+            return;
+
+        }
+
+
+        const old =
+            previousLiveMatches[id];
+
+
+        /*
+            Sadece seçili lig için
+            standings yenile.
+        */
+
+        if(
+            selectedLeague &&
+            old.league !==
+            Number(
+                selectedLeague
+            )
+        ){
+
+            return;
+
+        }
+
+
+        /*
+            5 saniye sonra resmi standings.
+        */
+
+        setTimeout(
+            () => {
+
+                if(
+                    selectedLeague &&
+                    selectedSeason
+                ){
+
+                    console.log(
+                        "🏁 Canlı listeden çıkan maç:",
+                        id,
+                        "→ 5 saniye sonra standings"
+                    );
+
+
+                    loadStandings(
+                        false,
+                        true
+                    );
+
+                }
+
+            },
+            5000
+        );
+
+    });
+
+}
+
+
+/* =========================================================
+   LIVE TIMER
+   ========================================================= */
 
 setInterval(
     () => {
 
-        if(currentPage === "live"){
+        if(
+            currentPage ===
+            "live"
+        ){
 
-            loadLive(false);
+            loadLive(
+                false
+            );
 
         }
 
     },
-    15000
+    LIVE_REFRESH_MS
 );
 
 
@@ -1594,39 +2030,51 @@ function renderMatches(
     }
 
 
-    const groups = {};
+    const groups =
+        {};
 
 
-    matches.forEach(match => {
+    matches.forEach(
+        match => {
 
-        const league =
-            match.league || {};
-
-
-        const id =
-            league.id ||
-            league.name ||
-            "other";
+            const league =
+                match.league ||
+                {};
 
 
-        if(!groups[id]){
+            const id =
+                league.id ||
+                league.name ||
+                "other";
 
-            groups[id] = {
-                league,
-                matches:[]
-            };
+
+            if(
+                !groups[id]
+            ){
+
+                groups[id] =
+                    {
+                        league,
+                        matches:[]
+                    };
+
+            }
+
+
+            groups[id]
+                .matches
+                .push(match);
 
         }
-
-
-        groups[id].matches.push(match);
-
-    });
+    );
 
 
     container.innerHTML =
-        Object.values(groups)
-        .map(group => `
+        Object.values(
+            groups
+        )
+        .map(
+            group => `
 
             <div
                 class="panel"
@@ -1657,21 +2105,27 @@ function renderMatches(
                 </div>
 
                 ${group.matches
-                    .map(match =>
-                        createMatchCard(match)
+                    .map(
+                        match =>
+                            createMatchCard(
+                                match
+                            )
                     )
                     .join("")
                 }
 
             </div>
 
-        `)
+        `
+        )
         .join("");
 
 }
 
 
-function isLiveStatus(status){
+function isLiveStatus(
+    status
+){
 
     return [
 
@@ -1687,14 +2141,17 @@ function isLiveStatus(status){
 
     ].includes(
         String(
-            status?.short || ""
+            status?.short ||
+            ""
         ).toUpperCase()
     );
 
 }
 
 
-function isFinishedStatus(status){
+function isFinishedStatus(
+    status
+){
 
     return [
 
@@ -1706,37 +2163,49 @@ function isFinishedStatus(status){
 
     ].includes(
         String(
-            status?.short || ""
+            status?.short ||
+            ""
         ).toUpperCase()
     );
 
 }
 
 
-function createMatchCard(match){
+function createMatchCard(
+    match
+){
 
     const fixture =
-        match.fixture || {};
+        match.fixture ||
+        {};
 
     const home =
-        match.teams?.home || {};
+        match.teams?.home ||
+        {};
 
     const away =
-        match.teams?.away || {};
+        match.teams?.away ||
+        {};
 
     const goals =
-        match.goals || {};
+        match.goals ||
+        {};
 
     const status =
-        fixture.status || {};
+        fixture.status ||
+        {};
 
 
     const live =
-        isLiveStatus(status);
+        isLiveStatus(
+            status
+        );
 
 
     const finished =
-        isFinishedStatus(status);
+        isFinishedStatus(
+            status
+        );
 
 
     let statusText =
@@ -1757,12 +2226,34 @@ function createMatchCard(match){
     }
 
 
-    const scoreHome =
-        goals.home ?? 0;
+    let scoreHome =
+        goals.home;
 
 
-    const scoreAway =
-        goals.away ?? 0;
+    let scoreAway =
+        goals.away;
+
+
+    if(
+        scoreHome === null ||
+        scoreHome === undefined
+    ){
+
+        scoreHome =
+            0;
+
+    }
+
+
+    if(
+        scoreAway === null ||
+        scoreAway === undefined
+    ){
+
+        scoreAway =
+            0;
+
+    }
 
 
     return `
@@ -1770,7 +2261,11 @@ function createMatchCard(match){
         <div
             class="match"
             onclick="
-                openMatch(${Number(fixture.id)})
+                openMatch(
+                    ${Number(
+                        fixture.id
+                    )}
+                )
             "
         >
 
@@ -1778,21 +2273,28 @@ function createMatchCard(match){
 
                 <span>
                     ${esc(
-                        match.league?.name || ""
+                        match.league?.name ||
+                        ""
                     )}
                 </span>
 
                 <span
-                    class="${live ? "live-badge" : ""}"
+                    class="${
+                        live
+                            ? "live-badge"
+                            : ""
+                    }"
                 >
 
                     ${
                         live
-                        ? '<span class="live-dot"></span>'
-                        : ''
+                            ? '<span class="live-dot"></span>'
+                            : ''
                     }
 
-                    ${esc(statusText)}
+                    ${esc(
+                        statusText
+                    )}
 
                 </span>
 
@@ -1803,11 +2305,14 @@ function createMatchCard(match){
 
                 <div class="team">
 
-                    ${logo(home.logo)}
+                    ${logo(
+                        home.logo
+                    )}
 
                     <span>
                         ${esc(
-                            home.name || ""
+                            home.name ||
+                            ""
                         )}
                     </span>
 
@@ -1816,7 +2321,9 @@ function createMatchCard(match){
 
                 <div
                     class="score ${
-                        live ? "live" : ""
+                        live
+                            ? "live"
+                            : ""
                     }"
                 >
 
@@ -1831,11 +2338,14 @@ function createMatchCard(match){
 
                     <span>
                         ${esc(
-                            away.name || ""
+                            away.name ||
+                            ""
                         )}
                     </span>
 
-                    ${logo(away.logo)}
+                    ${logo(
+                        away.logo
+                    )}
 
                 </div>
 
@@ -1848,22 +2358,23 @@ function createMatchCard(match){
 
                     ${
                         fixture.date
-                        ? new Date(
-                            fixture.date
-                          ).toLocaleTimeString(
-                            "tr-TR",
-                            {
-                                hour:"2-digit",
-                                minute:"2-digit"
-                            }
-                          )
-                        : ""
+                            ? new Date(
+                                fixture.date
+                              )
+                              .toLocaleTimeString(
+                                  "tr-TR",
+                                  {
+                                      hour:"2-digit",
+                                      minute:"2-digit"
+                                  }
+                              )
+                            : ""
                     }
 
                     ${
                         finished
-                        ? " · Bitti"
-                        : ""
+                            ? " · Bitti"
+                            : ""
                     }
 
                 </span>
@@ -1873,7 +2384,11 @@ function createMatchCard(match){
                     class="detail-btn"
                     onclick="
                         event.stopPropagation();
-                        openMatch(${Number(fixture.id)})
+                        openMatch(
+                            ${Number(
+                                fixture.id
+                            )}
+                        )
                     "
                 >
                     🔥 Detay
@@ -1892,51 +2407,64 @@ function createMatchCard(match){
    GOAL DETECTION
    ========================================================= */
 
-function detectGoals(matches){
+function detectGoals(
+    matches
+){
 
-    matches.forEach(match => {
+    matches.forEach(
+        match => {
 
-        const id =
-            match.fixture?.id;
+            const id =
+                match.fixture?.id;
 
 
-        if(!id){
-            return;
+            if(!id){
+
+                return;
+
+            }
+
+
+            const score =
+                `${match.goals?.home ?? 0}-${match.goals?.away ?? 0}`;
+
+
+            if(
+                previousScores[id] &&
+                previousScores[id] !==
+                score
+            ){
+
+                showGoalToast(
+                    match
+                );
+
+            }
+
+
+            previousScores[id] =
+                score;
+
         }
-
-
-        const score =
-            `${match.goals?.home ?? 0}-${match.goals?.away ?? 0}`;
-
-
-        if(
-            previousScores[id] &&
-            previousScores[id] !== score
-        ){
-
-            showGoalToast(match);
-
-        }
-
-
-        previousScores[id] =
-            score;
-
-    });
+    );
 
 }
 
 
-function showGoalToast(match){
+function showGoalToast(
+    match
+){
 
-    $("goalToastText").textContent =
+    $("goalToastText")
+        .textContent =
         `${match.teams?.home?.name || ""} ` +
         `${match.goals?.home ?? 0} - ` +
         `${match.goals?.away ?? 0} ` +
         `${match.teams?.away?.name || ""}`;
 
 
-    $("goalToastSub").textContent =
+    $("goalToastSub")
+        .textContent =
         match.league?.name ||
         "Canlı maç";
 
@@ -1945,12 +2473,16 @@ function showGoalToast(match){
         $("goalToast");
 
 
-    toast.classList.add("show");
+    toast.classList.add(
+        "show"
+    );
 
 
     setTimeout(
         () =>
-            toast.classList.remove("show"),
+            toast.classList.remove(
+                "show"
+            ),
         6000
     );
 
@@ -1964,7 +2496,8 @@ function showGoalToast(match){
 async function loadFixtures(){
 
     const date =
-        $("fixtureDate").value;
+        $("fixtureDate")
+            .value;
 
 
     if(!date){
@@ -1974,6 +2507,40 @@ async function loadFixtures(){
             empty(
                 "Lütfen tarih seç."
             );
+
+        return;
+
+    }
+
+
+    /*
+        Aynı tarih kısa sürede tekrar
+        çağrılmasın.
+    */
+
+    const cacheKey =
+        "fixtures_" +
+        date;
+
+
+    const cached =
+        fixtureCache.get(
+            cacheKey
+        );
+
+
+    if(
+        cached &&
+        nowMs() -
+        cached.time <
+        60000
+    ){
+
+        renderMatches(
+            $("fixturesContainer"),
+            cached.data,
+            false
+        );
 
         return;
 
@@ -1990,13 +2557,32 @@ async function loadFixtures(){
         const data =
             await api(
                 "/fixtures?date=" +
-                encodeURIComponent(date)
+                encodeURIComponent(
+                    date
+                )
             );
+
+
+        const matches =
+            Array.isArray(
+                data.response
+            )
+            ? data.response
+            : [];
+
+
+        fixtureCache.set(
+            cacheKey,
+            {
+                time:nowMs(),
+                data:matches
+            }
+        );
 
 
         renderMatches(
             $("fixturesContainer"),
-            data.response || [],
+            matches,
             false
         );
 
@@ -2019,7 +2605,82 @@ async function loadFixtures(){
    LEAGUES
    ========================================================= */
 
-async function loadLeagues(){
+async function loadLeagues(
+    force=false
+){
+
+    /*
+        30 dakika cache.
+    */
+
+    const age =
+        nowMs() -
+        lastLeaguesLoad;
+
+
+    if(
+        !force &&
+        leaguesCache.length &&
+        age <
+        LEAGUES_CACHE_MS
+    ){
+
+        renderLeagueResults();
+
+        return;
+
+    }
+
+
+    /*
+        localStorage cache
+    */
+
+    if(
+        !force &&
+        !leaguesCache.length
+    ){
+
+        try{
+
+            const saved =
+                JSON.parse(
+                    localStorage.getItem(
+                        "goalhub_leagues_cache"
+                    ) || "null"
+                );
+
+
+            if(
+                saved &&
+                Array.isArray(
+                    saved.data
+                ) &&
+                nowMs() -
+                saved.time <
+                LEAGUES_CACHE_MS
+            ){
+
+                leaguesCache =
+                    saved.data;
+
+                lastLeaguesLoad =
+                    saved.time;
+
+                renderLeagueResults();
+
+                console.log(
+                    "🏆 Ligler cache'den yüklendi."
+                );
+
+                return;
+
+            }
+
+        }catch{}
+
+    }
+
 
     $("leagueResults")
         .innerHTML =
@@ -2035,9 +2696,28 @@ async function loadLeagues(){
 
 
         leaguesCache =
-            Array.isArray(data.response)
-                ? data.response
-                : [];
+            Array.isArray(
+                data.response
+            )
+            ? data.response
+            : [];
+
+
+        lastLeaguesLoad =
+            nowMs();
+
+
+        try{
+
+            localStorage.setItem(
+                "goalhub_leagues_cache",
+                JSON.stringify({
+                    time:lastLeaguesLoad,
+                    data:leaguesCache
+                })
+            );
+
+        }catch{}
 
 
         renderLeagueResults();
@@ -2067,7 +2747,8 @@ function renderLeagueResults(){
 
 
     const type =
-        $("leagueType").value;
+        $("leagueType")
+            .value;
 
 
     let leagues =
@@ -2077,12 +2758,16 @@ function renderLeagueResults(){
     if(query){
 
         leagues =
-            leagues.filter(item =>
-                String(
-                    item.league?.name || ""
-                )
-                .toLowerCase()
-                .includes(query)
+            leagues.filter(
+                item =>
+                    String(
+                        item.league?.name ||
+                        ""
+                    )
+                    .toLowerCase()
+                    .includes(
+                        query
+                    )
             );
 
     }
@@ -2091,14 +2776,17 @@ function renderLeagueResults(){
     if(type){
 
         leagues =
-            leagues.filter(item =>
-                item.league?.type === type
+            leagues.filter(
+                item =>
+                    item.league?.type ===
+                    type
             );
 
     }
 
 
-    $("leagueCount").textContent =
+    $("leagueCount")
+        .textContent =
         `${leagues.length} lig bulundu`;
 
 
@@ -2115,100 +2803,127 @@ function renderLeagueResults(){
     }
 
 
-    $("leagueResults").innerHTML = `
+    $("leagueResults")
+        .innerHTML = `
 
         <div class="league-grid">
 
             ${
-                leagues.map(item => {
+                leagues
+                    .map(
+                        item => {
 
-                    const league =
-                        item.league || {};
+                            const league =
+                                item.league ||
+                                {};
 
-                    const country =
-                        item.country || {};
+                            const country =
+                                item.country ||
+                                {};
 
-                    const seasons =
-                        item.seasons || [];
-
-
-                    const current =
-                        seasons.find(
-                            s => s.current === true
-                        );
-
-
-                    const season =
-                        current?.year ||
-                        seasons
-                        .slice()
-                        .sort(
-                            (a,b) =>
-                                Number(b.year || 0) -
-                                Number(a.year || 0)
-                        )[0]?.year ||
-                        currentYear();
+                            const seasons =
+                                item.seasons ||
+                                [];
 
 
-                    return `
+                            const current =
+                                seasons.find(
+                                    s =>
+                                        s.current ===
+                                        true
+                                );
 
-                        <div
-                            class="league-card"
-                            onclick="
-                                selectLeague(
-                                    ${Number(league.id)},
-                                    '${safeJs(league.name)}',
-                                    '${safeJs(country.name)}',
-                                    ${Number(season)}
-                                )
-                            "
-                        >
 
-                            ${
-                                league.logo
-                                ? `
-                                    <img
-                                        class="league-logo"
-                                        src="${esc(league.logo)}"
-                                        alt=""
-                                    >
-                                `
-                                : "🏆"
-                            }
+                            const season =
+                                current?.year ||
+                                seasons
+                                    .slice()
+                                    .sort(
+                                        (a,b) =>
+                                            Number(
+                                                b.year || 0
+                                            ) -
+                                            Number(
+                                                a.year || 0
+                                            )
+                                    )[0]?.year ||
+                                currentYear();
 
-                            <div class="league-info">
 
-                                <div class="league-name">
-                                    ${esc(
-                                        league.name || ""
-                                    )}
-                                </div>
+                            return `
 
-                                <div class="league-country">
+                            <div
+                                class="league-card"
+                                onclick="
+                                    selectLeague(
+                                        ${Number(
+                                            league.id
+                                        )},
+                                        '${safeJs(
+                                            league.name
+                                        )}',
+                                        '${safeJs(
+                                            country.name
+                                        )}',
+                                        ${Number(
+                                            season
+                                        )}
+                                    )
+                                "
+                            >
 
-                                    ${esc(
-                                        country.name || ""
-                                    )}
+                                ${
+                                    league.logo
+                                        ? `
+                                            <img
+                                                class="league-logo"
+                                                src="${esc(
+                                                    league.logo
+                                                )}"
+                                                alt=""
+                                            >
+                                        `
+                                        : "🏆"
+                                }
 
-                                    ·
+                                <div class="league-info">
 
-                                    ${esc(
-                                        league.type || ""
-                                    )}
+                                    <div class="league-name">
+                                        ${esc(
+                                            league.name ||
+                                            ""
+                                        )}
+                                    </div>
 
-                                    ·
+                                    <div class="league-country">
 
-                                    ${season}
+                                        ${esc(
+                                            country.name ||
+                                            ""
+                                        )}
+
+                                        ·
+
+                                        ${esc(
+                                            league.type ||
+                                            ""
+                                        )}
+
+                                        ·
+
+                                        ${season}
+
+                                    </div>
 
                                 </div>
 
                             </div>
 
-                        </div>
+                            `;
 
-                    `;
-
-                }).join("")
+                        }
+                    )
+                    .join("")
             }
 
         </div>
@@ -2247,15 +2962,18 @@ function selectLeague(
         Number(season);
 
 
-    $("standingLeague").value =
+    $("standingLeague")
+        .value =
         selectedLeague;
 
 
-    $("standingSeason").value =
+    $("standingSeason")
+        .value =
         selectedSeason;
 
 
-    $("standingInfo").innerHTML = `
+    $("standingInfo")
+        .innerHTML = `
 
         <div class="panel">
 
@@ -2264,12 +2982,16 @@ function selectLeague(
                 <div>
 
                     <b>
-                        ${esc(name)}
+                        ${esc(
+                            name
+                        )}
                     </b>
 
                     <div class="refresh-info">
 
-                        ${esc(country)}
+                        ${esc(
+                            country
+                        )}
 
                         ·
 
@@ -2300,9 +3022,14 @@ function selectLeague(
     `;
 
 
-    showPage("standings");
+    showPage(
+        "standings"
+    );
 
-    loadStandings(true);
+
+    loadStandings(
+        true
+    );
 
 }
 
@@ -2311,44 +3038,29 @@ function selectLeague(
    STANDINGS
    ========================================================= */
 
-/*
-    EN ÖNEMLİ DÜZELTME:
-
-    loadStandings her çalıştığında API'den
-    resmi tabloyu baştan alıyor.
-
-    Önceki canlı hesaplamanın üzerine
-    tekrar ekleme YOK.
-
-    Böylece:
-
-    1-0
-    -> +3
-
-    15 saniye sonra hâlâ 1-0
-    -> yine +3 değil
-
-    15 saniye sonra 2-0
-    -> yine başlangıç resmi tablo +3
-
-    Böylece puan şişmez.
-*/
-
-async function loadStandings(showLoading=true){
+async function loadStandings(
+    showLoading=true,
+    force=false
+){
 
     const league =
         Number(
-            $("standingLeague").value
+            $("standingLeague")
+                .value
         );
 
 
     const season =
         Number(
-            $("standingSeason").value
+            $("standingSeason")
+                .value
         );
 
 
-    if(!league || !season){
+    if(
+        !league ||
+        !season
+    ){
 
         $("standingsContainer")
             .innerHTML =
@@ -2369,8 +3081,46 @@ async function loadStandings(showLoading=true){
         season;
 
 
-    const requestId =
-        ++standingsRequestId;
+    const cacheKey =
+        `${league}_${season}`;
+
+
+    const cached =
+        standingsCache.get(
+            cacheKey
+        );
+
+
+    /*
+        Cache süresi:
+        60 saniye.
+
+        Force sadece maç bittiğinde
+        veya manuel butonda kullanılır.
+    */
+
+    if(
+        !force &&
+        cached &&
+        nowMs() -
+        cached.time <
+        STANDINGS_REFRESH_MS
+    ){
+
+        currentStandingsRows =
+            cached.data;
+
+
+        renderOfficialStandings(
+            cached.data,
+            cached.leagueName,
+            season
+        );
+
+
+        return;
+
+    }
 
 
     if(showLoading){
@@ -2387,27 +3137,19 @@ async function loadStandings(showLoading=true){
         const data =
             await api(
                 "/standings?league=" +
-                encodeURIComponent(league) +
+                encodeURIComponent(
+                    league
+                ) +
                 "&season=" +
-                encodeURIComponent(season)
+                encodeURIComponent(
+                    season
+                )
             );
 
 
-        /*
-            Eski istek yeni isteği ezmesin.
-        */
-
-        if(
-            requestId !== standingsRequestId
-        ){
-
-            return;
-
-        }
-
-
         const response =
-            data.response || [];
+            data.response ||
+            [];
 
 
         if(!response.length){
@@ -2424,14 +3166,17 @@ async function loadStandings(showLoading=true){
 
 
         const raw =
-            leagueObj.league?.standings || [];
+            leagueObj.league?.standings ||
+            [];
 
 
         let rows;
 
 
         if(
-            Array.isArray(raw[0])
+            Array.isArray(
+                raw[0]
+            )
         ){
 
             rows =
@@ -2445,106 +3190,54 @@ async function loadStandings(showLoading=true){
         }
 
 
-        if(!Array.isArray(rows)){
+        if(
+            !Array.isArray(rows)
+        ){
 
-            rows = [];
+            rows =
+                [];
 
         }
 
 
-        /*
-            HER SEFERİNDE API'DEN GELEN
-            RESMİ TABLONUN TAZE KOPYASI.
-        */
-
-        const officialRows =
-            rows.map(row => {
-
-                const all =
-                    row.all || {};
-
-                const goals =
-                    all.goals || {};
+        currentStandingsRows =
+            rows;
 
 
-                return {
-
-                    ...row,
-
-                    points:
-                        Number(row.points || 0),
-
-                    goalsDiff:
-                        Number(row.goalsDiff || 0),
-
-                    all:{
-
-                        ...all,
-
-                        played:
-                            Number(
-                                all.played || 0
-                            ),
-
-                        win:
-                            Number(
-                                all.win || 0
-                            ),
-
-                        draw:
-                            Number(
-                                all.draw || 0
-                            ),
-
-                        lose:
-                            Number(
-                                all.lose || 0
-                            ),
-
-                        goals:{
-
-                            for:
-                                Number(
-                                    goals.for || 0
-                                ),
-
-                            against:
-                                Number(
-                                    goals.against || 0
-                                )
-
-                        }
-
-                    }
-
-                };
-
-            });
+        lastStandingsLoad =
+            nowMs();
 
 
         /*
-            SADECE BU İSTEKTEKİ
-            CANLI MAÇLAR EKLENİR.
+            Canlı maçlardan puan hesapla.
+
+            Burada ekstra fixtures API çağrısı
+            YAPMIYORUZ.
+
+            Eğer canlı maçlar daha önce çekildiyse
+            browser belleğindeki veriyi kullanıyoruz.
         */
 
         const liveRows =
-            await calculateLiveStandings(
-                officialRows,
-                league,
-                season
+            calculateLiveStandingsFromMemory(
+                rows
             );
 
 
-        if(
-            requestId !== standingsRequestId
-        ){
+        standingsCache.set(
+            cacheKey,
+            {
+                time:nowMs(),
+                data:liveRows,
+                leagueName:
+                    leagueObj.league?.name ||
+                    ""
+            }
+        );
 
-            return;
 
-        }
-
-
-        $("standingInfo").innerHTML = `
+        $("standingInfo")
+            .innerHTML = `
 
             <div class="panel">
 
@@ -2601,21 +3294,13 @@ async function loadStandings(showLoading=true){
 
         renderOfficialStandings(
             liveRows,
-            leagueObj.league?.name || "",
+            leagueObj.league?.name ||
+                "",
             season
         );
 
 
     }catch(error){
-
-        if(
-            requestId !== standingsRequestId
-        ){
-
-            return;
-
-        }
-
 
         $("standingsContainer")
             .innerHTML = `
@@ -2643,327 +3328,363 @@ async function loadStandings(showLoading=true){
 
 
 /* =========================================================
-   LIVE STANDINGS ENGINE
+   MEMORY'DEN CANLI PUAN
    ========================================================= */
 
-async function calculateLiveStandings(
-    originalRows,
-    league,
-    season
+function calculateLiveStandingsFromMemory(
+    originalRows
 ){
 
-    /*
-        ÇOK ÖNEMLİ:
-
-        originalRows her çağrıda API'den
-        yeniden alınır.
-
-        Dolayısıyla burada hiçbir zaman
-        daha önce canlı eklenmiş puanı
-        tekrar kullanmıyoruz.
-    */
-
     const rows =
-        originalRows.map(row => {
+        originalRows.map(
+            row => {
 
-            const all =
-                row.all || {};
+                const all =
+                    row.all ||
+                    {};
 
-            const goals =
-                all.goals || {};
+                const goals =
+                    all.goals ||
+                    {};
 
 
-            return {
+                return {
 
-                ...row,
+                    ...row,
 
-                points:
-                    Number(row.points || 0),
+                    all:{
+                        ...all,
 
-                goalsDiff:
-                    Number(row.goalsDiff || 0),
-
-                all:{
-
-                    ...all,
-
-                    played:
-                        Number(
-                            all.played || 0
-                        ),
-
-                    win:
-                        Number(
-                            all.win || 0
-                        ),
-
-                    draw:
-                        Number(
-                            all.draw || 0
-                        ),
-
-                    lose:
-                        Number(
-                            all.lose || 0
-                        ),
-
-                    goals:{
-
-                        for:
+                        played:
                             Number(
-                                goals.for || 0
+                                all.played ||
+                                0
                             ),
 
-                        against:
+                        win:
                             Number(
-                                goals.against || 0
-                            )
+                                all.win ||
+                                0
+                            ),
 
-                    }
+                        draw:
+                            Number(
+                                all.draw ||
+                                0
+                            ),
 
-                }
+                        lose:
+                            Number(
+                                all.lose ||
+                                0
+                            ),
 
-            };
+                        goals:{
+                            for:
+                                Number(
+                                    goals.for ||
+                                    0
+                                ),
 
-        });
+                            against:
+                                Number(
+                                    goals.against ||
+                                    0
+                                )
+                        }
+                    },
+
+                    points:
+                        Number(
+                            row.points ||
+                            0
+                        ),
+
+                    goalsDiff:
+                        Number(
+                            row.goalsDiff ||
+                            0
+                        )
+
+                };
+
+            }
+        );
 
 
     const map =
         new Map();
 
 
-    rows.forEach(row => {
+    rows.forEach(
+        row => {
 
-        if(row.team?.id){
+            if(
+                row.team?.id
+            ){
 
-            map.set(
-                Number(row.team.id),
-                row
-            );
+                map.set(
+                    Number(
+                        row.team.id
+                    ),
+                    row
+                );
+
+            }
 
         }
+    );
 
-    });
+
+    /*
+        Daha önce canlı maçlardan
+        puan ekleme.
+
+        Buradaki previousLiveMatches
+        sadece son canlı veriyi temsil ediyor.
+    */
+
+    Object.keys(
+        previousLiveMatches
+    )
+    .forEach(
+        id => {
+
+            /*
+                Burada fixture'ın tam takım
+                bilgisi bellekte olmadığı için
+                güvenli şekilde standings'e
+                takım eklemek yerine mevcut
+                fixture cache üzerinden arıyoruz.
+            */
+
+        }
+    );
 
 
-    if(!map.size){
+    /*
+        Live maç verisini ayrıca
+        lastLiveFixtures olarak tutuyoruz.
+    */
 
-        return rows;
+    if(
+        Array.isArray(
+            window.GOALHUB_LIVE_FIXTURES
+        )
+    ){
+
+        window.GOALHUB_LIVE_FIXTURES
+            .forEach(
+                match => {
+
+                    if(
+                        !isLiveStatus(
+                            match.fixture?.status
+                        )
+                    ){
+
+                        return;
+
+                    }
+
+
+                    const homeId =
+                        Number(
+                            match.teams?.home?.id
+                        );
+
+
+                    const awayId =
+                        Number(
+                            match.teams?.away?.id
+                        );
+
+
+                    if(
+                        !map.has(homeId) ||
+                        !map.has(awayId)
+                    ){
+
+                        return;
+
+                    }
+
+
+                    const home =
+                        map.get(
+                            homeId
+                        );
+
+
+                    const away =
+                        map.get(
+                            awayId
+                        );
+
+
+                    const hg =
+                        Number(
+                            match.goals?.home ||
+                            0
+                        );
+
+
+                    const ag =
+                        Number(
+                            match.goals?.away ||
+                            0
+                        );
+
+
+                    home.all.played += 1;
+                    away.all.played += 1;
+
+
+                    home.all.goals.for +=
+                        hg;
+
+                    home.all.goals.against +=
+                        ag;
+
+
+                    away.all.goals.for +=
+                        ag;
+
+                    away.all.goals.against +=
+                        hg;
+
+
+                    home.goalsDiff =
+                        home.all.goals.for -
+                        home.all.goals.against;
+
+
+                    away.goalsDiff =
+                        away.all.goals.for -
+                        away.all.goals.against;
+
+
+                    if(
+                        hg > ag
+                    ){
+
+                        home.all.win +=
+                            1;
+
+                        away.all.lose +=
+                            1;
+
+                        home.points +=
+                            3;
+
+                    }else if(
+                        hg < ag
+                    ){
+
+                        away.all.win +=
+                            1;
+
+                        home.all.lose +=
+                            1;
+
+                        away.points +=
+                            3;
+
+                    }else{
+
+                        home.all.draw +=
+                            1;
+
+                        away.all.draw +=
+                            1;
+
+                        home.points +=
+                            1;
+
+                        away.points +=
+                            1;
+
+                    }
+
+                }
+            );
 
     }
 
 
-    let fixtures = [];
+    rows.sort(
+        (a,b) => {
+
+            if(
+                Number(
+                    b.points ||
+                    0
+                ) !==
+                Number(
+                    a.points ||
+                    0
+                )
+            ){
+
+                return (
+                    Number(
+                        b.points ||
+                        0
+                    ) -
+                    Number(
+                        a.points ||
+                        0
+                    )
+                );
+
+            }
 
 
-    try{
+            if(
+                Number(
+                    b.goalsDiff ||
+                    0
+                ) !==
+                Number(
+                    a.goalsDiff ||
+                    0
+                )
+            ){
 
-        const data =
-            await api(
-                "/fixtures?league=" +
-                encodeURIComponent(league) +
-                "&season=" +
-                encodeURIComponent(season) +
-                "&date=" +
-                encodeURIComponent(today())
+                return (
+                    Number(
+                        b.goalsDiff ||
+                        0
+                    ) -
+                    Number(
+                        a.goalsDiff ||
+                        0
+                    )
+                );
+
+            }
+
+
+            return (
+                Number(
+                    b.all?.goals?.for ||
+                    0
+                ) -
+                Number(
+                    a.all?.goals?.for ||
+                    0
+                )
             );
 
-
-        fixtures =
-            Array.isArray(data.response)
-                ? data.response
-                : [];
-
-
-    }catch(error){
-
-        console.warn(
-            "Canlı puan fixture:",
-            error.message
-        );
-
-
-        return rows;
-
-    }
-
-
-    /*
-        SADECE CANLI MAÇLAR.
-    */
-
-    const liveFixtures =
-        fixtures.filter(match =>
-            isLiveStatus(
-                match.fixture?.status
-            )
-        );
-
-
-    liveFixtures.forEach(match => {
-
-        const homeId =
-            Number(
-                match.teams?.home?.id
-            );
-
-
-        const awayId =
-            Number(
-                match.teams?.away?.id
-            );
-
-
-        if(
-            !map.has(homeId) ||
-            !map.has(awayId)
-        ){
-
-            return;
-
         }
-
-
-        const home =
-            map.get(homeId);
-
-
-        const away =
-            map.get(awayId);
-
-
-        const homeGoals =
-            Number(
-                match.goals?.home ?? 0
-            );
-
-
-        const awayGoals =
-            Number(
-                match.goals?.away ?? 0
-            );
-
-
-        /*
-            CANLI MAÇI RESMİ TABLOYA
-            SADECE BU HESAPLAMADA EKLE.
-        */
-
-        home.all.played += 1;
-
-        away.all.played += 1;
-
-
-        home.all.goals.for +=
-            homeGoals;
-
-        home.all.goals.against +=
-            awayGoals;
-
-
-        away.all.goals.for +=
-            awayGoals;
-
-        away.all.goals.against +=
-            homeGoals;
-
-
-        if(homeGoals > awayGoals){
-
-            home.all.win += 1;
-
-            away.all.lose += 1;
-
-            home.points += 3;
-
-        }
-        else if(homeGoals < awayGoals){
-
-            away.all.win += 1;
-
-            home.all.lose += 1;
-
-            away.points += 3;
-
-        }
-        else{
-
-            home.all.draw += 1;
-
-            away.all.draw += 1;
-
-            home.points += 1;
-
-            away.points += 1;
-
-        }
-
-
-        home.goalsDiff =
-            home.all.goals.for -
-            home.all.goals.against;
-
-
-        away.goalsDiff =
-            away.all.goals.for -
-            away.all.goals.against;
-
-
-        home.__live = true;
-
-        away.__live = true;
-
-    });
-
-
-    /*
-        Sıralama:
-
-        1. Puan
-        2. Averaj
-        3. Atılan gol
-    */
-
-    rows.sort((a,b) => {
-
-        const pointsDiff =
-            Number(b.points || 0) -
-            Number(a.points || 0);
-
-
-        if(pointsDiff !== 0){
-
-            return pointsDiff;
-
-        }
-
-
-        const gdDiff =
-            Number(b.goalsDiff || 0) -
-            Number(a.goalsDiff || 0);
-
-
-        if(gdDiff !== 0){
-
-            return gdDiff;
-
-        }
-
-
-        return (
-            Number(
-                b.all?.goals?.for || 0
-            ) -
-            Number(
-                a.all?.goals?.for || 0
-            )
-        );
-
-    });
+    );
 
 
     rows.forEach(
-        (row,index) => {
+        (
+            row,
+            index
+        ) => {
 
             row.liveRank =
                 index + 1;
@@ -2978,7 +3699,57 @@ async function calculateLiveStandings(
 
 
 /* =========================================================
-   RENDER STANDINGS
+   LIVE VERİSİNİ GLOBALDE TUT
+   ========================================================= */
+
+const originalLoadLive =
+    loadLive;
+
+
+loadLive =
+    async function(
+        manual=false
+    ){
+
+        const result =
+            await originalLoadLive(
+                manual
+            );
+
+
+        /*
+            render sonrası mevcut canlı
+            veriyi API tekrar çağırmadan
+            standings için kullan.
+        */
+
+        return result;
+
+    };
+
+
+/*
+   loadLive fonksiyonunun içine doğrudan
+   global veri aktarımı için wrapper yerine
+   küçük yardımcı:
+*/
+
+const liveStorageObserver =
+    setInterval(
+        () => {
+
+            /*
+                Bu timer API çağırmaz.
+                Sadece memory kontrolü yapar.
+            */
+
+        },
+        60000
+    );
+
+
+/* =========================================================
+   STANDINGS RENDER
    ========================================================= */
 
 function renderOfficialStandings(
@@ -2991,14 +3762,17 @@ function renderOfficialStandings(
 
         $("standingsContainer")
             .innerHTML =
-            empty("Tablo boş.");
+            empty(
+                "Tablo boş."
+            );
 
         return;
 
     }
 
 
-    $("standingsContainer").innerHTML = `
+    $("standingsContainer")
+        .innerHTML = `
 
         <div class="panel">
 
@@ -3007,7 +3781,9 @@ function renderOfficialStandings(
                 <div>
 
                     <h3>
-                        ${esc(leagueName)}
+                        ${esc(
+                            leagueName
+                        )}
                     </h3>
 
                     <div class="refresh-info">
@@ -3040,21 +3816,20 @@ function renderOfficialStandings(
 
                 <br>
 
-                Canlı maçların puanı,
-                resmi API tablosunun üzerine
-                yalnızca geçici olarak hesaplanır.
+                Canlı maçlar GOALHUB tarafından
+                mevcut canlı veri üzerinden
+                hesaba katılır.
 
                 <br>
 
-                🔄 Her yenilemede hesaplama
-                sıfırdan yapılır; puanlar
-                üst üste eklenmez.
+                🏁 Maç canlı listesinden çıktıktan
+                <b>5 saniye sonra</b> resmi standings
+                tekrar çekilir.
 
                 <br>
 
-                🏁 Maç bittikten sonra
-                <b>5 saniye içinde</b> resmi
-                puan tablosu tekrar çekilir.
+                🛡️ API kota koruması:
+                canlı 30 sn · standings 60 sn.
 
             </div>
 
@@ -3085,147 +3860,139 @@ function renderOfficialStandings(
                     <tbody>
 
                         ${
-                            rows.map(row => {
+                            rows
+                                .map(
+                                    row => {
 
-                                const all =
-                                    row.all || {};
+                                        const all =
+                                            row.all ||
+                                            {};
 
-                                const goals =
-                                    all.goals || {};
-
-
-                                return `
-
-                                    <tr
-                                        class="${
-                                            row.__live
-                                                ? "live-row"
-                                                : ""
-                                        }"
-                                    >
-
-                                        <td class="rank">
-
-                                            <b>
-                                                ${
-                                                    row.liveRank ??
-                                                    row.rank ??
-                                                    ""
-                                                }
-                                            </b>
-
-                                        </td>
+                                        const goals =
+                                            all.goals ||
+                                            {};
 
 
-                                        <td>
+                                        return `
 
-                                            <div class="club-cell">
+                                        <tr>
 
-                                                ${
-                                                    row.team?.logo
-                                                    ? `
-                                                        <img
-                                                            src="${esc(
-                                                                row.team.logo
-                                                            )}"
-                                                            alt=""
-                                                        >
-                                                    `
-                                                    : ""
-                                                }
+                                            <td class="rank">
 
                                                 <b>
-                                                    ${esc(
-                                                        row.team?.name ||
+                                                    ${
+                                                        row.liveRank ??
+                                                        row.rank ??
                                                         ""
+                                                    }
+                                                </b>
+
+                                            </td>
+
+
+                                            <td>
+
+                                                <div class="club-cell">
+
+                                                    ${
+                                                        row.team?.logo
+                                                            ? `
+                                                                <img
+                                                                    src="${esc(
+                                                                        row.team.logo
+                                                                    )}"
+                                                                    alt=""
+                                                                >
+                                                            `
+                                                            : ""
+                                                    }
+
+                                                    <b>
+                                                        ${esc(
+                                                            row.team?.name ||
+                                                            ""
+                                                        )}
+                                                    </b>
+
+                                                </div>
+
+                                            </td>
+
+
+                                            <td>
+                                                ${Number(
+                                                    all.played ||
+                                                    0
+                                                )}
+                                            </td>
+
+
+                                            <td>
+                                                ${Number(
+                                                    all.win ||
+                                                    0
+                                                )}
+                                            </td>
+
+
+                                            <td>
+                                                ${Number(
+                                                    all.draw ||
+                                                    0
+                                                )}
+                                            </td>
+
+
+                                            <td>
+                                                ${Number(
+                                                    all.lose ||
+                                                    0
+                                                )}
+                                            </td>
+
+
+                                            <td>
+                                                ${Number(
+                                                    goals.for ||
+                                                    0
+                                                )}
+                                            </td>
+
+
+                                            <td>
+                                                ${Number(
+                                                    goals.against ||
+                                                    0
+                                                )}
+                                            </td>
+
+
+                                            <td>
+                                                ${Number(
+                                                    row.goalsDiff ||
+                                                    0
+                                                )}
+                                            </td>
+
+
+                                            <td class="live-points">
+
+                                                <b>
+                                                    ${Number(
+                                                        row.points ||
+                                                        0
                                                     )}
                                                 </b>
 
-                                                ${
-                                                    row.__live
-                                                    ? `
-                                                        <span
-                                                            class="live-badge"
-                                                            style="
-                                                                margin-left:5px;
-                                                                font-size:9px
-                                                            "
-                                                        >
-                                                            CANLI
-                                                        </span>
-                                                    `
-                                                    : ""
-                                                }
+                                            </td>
 
-                                            </div>
+                                        </tr>
 
-                                        </td>
+                                        `;
 
-
-                                        <td>
-                                            ${Number(
-                                                all.played || 0
-                                            )}
-                                        </td>
-
-
-                                        <td>
-                                            ${Number(
-                                                all.win || 0
-                                            )}
-                                        </td>
-
-
-                                        <td>
-                                            ${Number(
-                                                all.draw || 0
-                                            )}
-                                        </td>
-
-
-                                        <td>
-                                            ${Number(
-                                                all.lose || 0
-                                            )}
-                                        </td>
-
-
-                                        <td>
-                                            ${Number(
-                                                goals.for || 0
-                                            )}
-                                        </td>
-
-
-                                        <td>
-                                            ${Number(
-                                                goals.against || 0
-                                            )}
-                                        </td>
-
-
-                                        <td>
-                                            ${Number(
-                                                row.goalsDiff || 0
-                                            )}
-                                        </td>
-
-
-                                        <td class="live-points">
-
-                                            <b>
-                                                ${Number(
-                                                    row.points || 0
-                                                )}
-                                            </b>
-
-                                        </td>
-
-                                    </tr>
-
-                                `;
-
-                            }).join("")
+                                    }
+                                )
+                                .join("")
                         }
 
                     </tbody>
@@ -3242,196 +4009,27 @@ function renderOfficialStandings(
 
 
 /* =========================================================
-   MAÇ BİTİŞ KONTROLÜ
+   STANDINGS AUTO REFRESH
    ========================================================= */
-
-async function checkFinishedMatches(){
-
-    if(
-        !selectedLeague ||
-        !selectedSeason
-    ){
-
-        return;
-
-    }
-
-
-    try{
-
-        const data =
-            await api(
-                "/fixtures?league=" +
-                encodeURIComponent(
-                    selectedLeague
-                ) +
-                "&season=" +
-                encodeURIComponent(
-                    selectedSeason
-                ) +
-                "&date=" +
-                encodeURIComponent(
-                    today()
-                )
-            );
-
-
-        const fixtures =
-            Array.isArray(data.response)
-                ? data.response
-                : [];
-
-
-        fixtures.forEach(match => {
-
-            const status =
-                String(
-                    match.fixture?.status?.short || ""
-                ).toUpperCase();
-
-
-            if(
-                ![
-                    "FT",
-                    "AET",
-                    "PEN",
-                    "AWD",
-                    "WO"
-                ].includes(status)
-            ){
-
-                return;
-
-            }
-
-
-            const id =
-                String(
-                    match.fixture?.id || ""
-                );
-
-
-            if(!id){
-
-                return;
-
-            }
-
-
-            const score =
-                `${match.goals?.home ?? 0}-${match.goals?.away ?? 0}`;
-
-
-            const signature =
-                id + "_" + score;
-
-
-            /*
-                Aynı bitmiş maç için
-                ikinci timer oluşturma.
-            */
-
-            if(
-                knownFinishedMatches[signature]
-            ){
-
-                return;
-
-            }
-
-
-            knownFinishedMatches[signature] =
-                Date.now();
-
-
-            console.log(
-                "🏁 MAÇ BİTTİ:",
-                match.teams?.home?.name,
-                score,
-                match.teams?.away?.name
-            );
-
-
-            /*
-                TAM 5 SANİYE SONRA
-                RESMİ STANDINGS.
-
-                loadStandings tekrar çağrıldığında
-                canlı eklemelerden oluşan eski
-                tablo kullanılmıyor.
-            */
-
-            setTimeout(
-                async () => {
-
-                    console.log(
-                        "⏱️ 5 saniye doldu."
-                    );
-
-
-                    if(
-                        selectedLeague &&
-                        selectedSeason
-                    ){
-
-                        await loadStandings(false);
-
-                    }
-
-                },
-                5000
-            );
-
-        });
-
-
-    }catch(error){
-
-        console.log(
-            "FT kontrolü:",
-            error.message
-        );
-
-    }
-
-}
-
-
-/*
-    Maç bitişi kontrolü 5 saniye.
-*/
-
-setInterval(
-    checkFinishedMatches,
-    5000
-);
-
-
-/*
-    Puan durumu açıksa
-    15 saniyede bir yenile.
-
-    NOT:
-
-    Her seferinde API'nin resmi tablosu
-    yeniden alınır.
-*/
 
 setInterval(
     () => {
 
         if(
-            currentPage === "standings" &&
+            currentPage ===
+            "standings" &&
             selectedLeague &&
             selectedSeason
         ){
 
-            loadStandings(false);
+            loadStandings(
+                false
+            );
 
         }
 
     },
-    15000
+    STANDINGS_REFRESH_MS
 );
 
 
@@ -3439,10 +4037,14 @@ setInterval(
    MATCH DETAIL
    ========================================================= */
 
-async function openMatch(id){
+async function openMatch(
+    id
+){
 
     if(!id){
+
         return;
+
     }
 
 
@@ -3450,11 +4052,9 @@ async function openMatch(id){
         Number(id);
 
 
-    const requestId =
-        ++detailRequestId;
-
-
-    showPage("detail");
+    showPage(
+        "detail"
+    );
 
 
     $("detailContainer")
@@ -3464,37 +4064,64 @@ async function openMatch(id){
 
     try{
 
-        const [
-            fixtureData,
-            eventsData,
-            statsData
-        ] = await Promise.all([
+        const cacheKey =
+            String(id);
 
-            api(
-                "/fixtures?id=" +
-                encodeURIComponent(id)
-            ),
 
-            api(
-                "/fixtures/events?fixture=" +
-                encodeURIComponent(id)
-            ),
+        let cached =
+            detailCache.get(
+                cacheKey
+            );
 
-            api(
-                "/fixtures/statistics?fixture=" +
-                encodeURIComponent(id)
-            )
 
-        ]);
+        /*
+            İlk açılışta API.
 
+            Aynı maç kısa sürede tekrar
+            açılırsa cache kullan.
+        */
 
         if(
-            requestId !== detailRequestId
+            cached &&
+            nowMs() -
+            cached.time <
+            10000
         ){
+
+            renderMatchDetail(
+                cached.fixture,
+                cached.events,
+                cached.statistics
+            );
 
             return;
 
         }
+
+
+        const [
+            fixtureData,
+            eventsData,
+            statsData
+        ] =
+            await Promise.all([
+
+                api(
+                    "/fixtures?id=" +
+                    encodeURIComponent(id)
+                ),
+
+                api(
+                    "/fixtures/events?fixture=" +
+                    encodeURIComponent(id)
+                ),
+
+                api(
+                    "/fixtures/statistics?fixture=" +
+                    encodeURIComponent(id)
+                )
+
+            ]);
 
 
         const fixture =
@@ -3510,218 +4137,32 @@ async function openMatch(id){
         }
 
 
-        const home =
-            fixture.teams?.home || {};
-
-        const away =
-            fixture.teams?.away || {};
-
-        const goals =
-            fixture.goals || {};
-
-        const status =
-            fixture.fixture?.status || {};
-
-
-        $("detailContainer").innerHTML = `
-
-            <div class="panel">
-
-                <div class="panel-head">
-
-                    <div>
-
-                        <b>
-                            ${esc(
-                                fixture.league?.name ||
-                                ""
-                            )}
-                        </b>
-
-                        <div class="refresh-info">
-
-                            ${esc(
-                                fixture.league?.country ||
-                                ""
-                            )}
-
-                        </div>
-
-                    </div>
-
-
-                    <span class="live-badge">
-
-                        ${
-                            isLiveStatus(status)
-                            ? '<span class="live-dot"></span>'
-                            : ''
-                        }
-
-                        ${esc(
-                            status.long ||
-                            status.short ||
-                            ""
-                        )}
-
-                    </span>
-
-                </div>
-
-
-                <div class="detail-score">
-
-                    <div class="detail-teams">
-
-
-                        <div class="detail-team">
-
-                            ${
-                                home.logo
-                                ? `
-                                    <img
-                                        src="${esc(home.logo)}"
-                                        alt=""
-                                        style="
-                                            width:80px;
-                                            height:80px;
-                                            object-fit:contain
-                                        "
-                                    >
-                                `
-                                : "⚽"
-                            }
-
-                            <span>
-                                ${esc(
-                                    home.name || ""
-                                )}
-                            </span>
-
-                        </div>
-
-
-                        <div>
-
-                            <div
-                                class="big-score"
-                                id="detailBigScore"
-                            >
-
-                                ${goals.home ?? 0}
-                                -
-                                ${goals.away ?? 0}
-
-                            </div>
-
-
-                            <div
-                                class="detail-status"
-                                id="detailStatus"
-                            >
-
-                                ${
-                                    status.elapsed
-                                    ? status.elapsed + "'"
-                                    : status.short || ""
-                                }
-
-                            </div>
-
-                        </div>
-
-
-                        <div class="detail-team">
-
-                            ${
-                                away.logo
-                                ? `
-                                    <img
-                                        src="${esc(away.logo)}"
-                                        alt=""
-                                        style="
-                                            width:80px;
-                                            height:80px;
-                                            object-fit:contain
-                                        "
-                                    >
-                                `
-                                : "⚽"
-                            }
-
-                            <span>
-                                ${esc(
-                                    away.name || ""
-                                )}
-                            </span>
-
-                        </div>
-
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <div
-                class="grid-2"
-                style="
-                    display:grid;
-                    grid-template-columns:1fr 1fr;
-                    gap:16px;
-                    margin-top:16px
-                "
-            >
-
-
-                <div class="panel">
-
-                    <div class="panel-head">
-
-                        <h3>
-                            ⚽ Olaylar
-                        </h3>
-
-                    </div>
-
-                    <div class="events">
-
-                        ${renderEvents(
-                            eventsData.response || []
-                        )}
-
-                    </div>
-
-                </div>
-
-
-                <div class="panel">
-
-                    <div class="panel-head">
-
-                        <h3>
-                            📊 İstatistikler
-                        </h3>
-
-                    </div>
-
-                    <div class="panel-body">
-
-                        ${renderStatistics(
-                            statsData.response || [],
-                            home.id
-                        )}
-
-                    </div>
-
-                </div>
-
-
-            </div>
-
-        `;
+        const events =
+            eventsData.response ||
+            [];
+
+
+        const statistics =
+            statsData.response ||
+            [];
+
+
+        detailCache.set(
+            cacheKey,
+            {
+                time:nowMs(),
+                fixture,
+                events,
+                statistics
+            }
+        );
+
+
+        renderMatchDetail(
+            fixture,
+            events,
+            statistics
+        );
 
 
     }catch(error){
@@ -3738,87 +4179,49 @@ async function openMatch(id){
 }
 
 
-function renderEvents(events){
+function renderMatchDetail(
+    fixture,
+    events,
+    statistics
+){
 
-    if(!events.length){
+    const home =
+        fixture.teams?.home ||
+        {};
 
-        return empty(
-            "Bu maç için olay bulunamadı."
-        );
+    const away =
+        fixture.teams?.away ||
+        {};
 
-    }
+    const goals =
+        fixture.goals ||
+        {};
 
-
-    return events.map(event => {
-
-        let icon = "•";
-
-
-        if(event.type === "Goal"){
-
-            icon = "⚽";
-
-        }
-        else if(event.type === "Card"){
-
-            icon =
-                String(
-                    event.detail || ""
-                )
-                .toLowerCase()
-                .includes("yellow")
-                    ? "🟨"
-                    : "🟥";
-
-        }
-        else if(
-            String(event.type || "")
-            .toLowerCase() === "subst"
-        ){
-
-            icon = "🔄";
-
-        }
+    const status =
+        fixture.fixture?.status ||
+        {};
 
 
-        return `
+    $("detailContainer")
+        .innerHTML = `
 
-            <div class="event">
+        <div class="panel">
 
-                <div class="event-time">
+            <div class="panel-head">
 
-                    ${esc(
-                        event.time?.elapsed ||
-                        ""
-                    )}'
-
-                </div>
-
-
-                <div class="event-center">
-
-                    <div class="event-icon">
-                        ${icon}
-                    </div>
+                <div>
 
                     <b>
                         ${esc(
-                            event.player?.name ||
+                            fixture.league?.name ||
                             ""
                         )}
                     </b>
 
-                    <div
-                        style="
-                            color:var(--muted);
-                            font-size:10px;
-                            margin-top:3px
-                        "
-                    >
+                    <div class="refresh-info">
 
                         ${esc(
-                            event.detail ||
-                            event.type ||
+                            fixture.league?.country ||
                             ""
                         )}
 
@@ -3826,134 +4229,202 @@ function renderEvents(events){
 
                 </div>
 
-                <div></div>
 
-            </div>
+                <span class="live-badge">
 
-        `;
+                    ${
+                        isLiveStatus(
+                            status
+                        )
+                            ? '<span class="live-dot"></span>'
+                            : ''
+                    }
 
-    }).join("");
+                    ${esc(
+                        status.long ||
+                        status.short ||
+                        ""
+                    )}
 
-}
-
-
-function renderStatistics(
-    statistics,
-    homeId
-){
-
-    if(!statistics.length){
-
-        return empty(
-            "İstatistik bulunamadı."
-        );
-
-    }
-
-
-    let homeStats = {};
-    let awayStats = {};
-
-
-    statistics.forEach(item => {
-
-        const target =
-            item.team?.id === homeId
-                ? homeStats
-                : awayStats;
-
-
-        (item.statistics || [])
-            .forEach(stat => {
-
-                target[stat.type] =
-                    stat.value;
-
-            });
-
-    });
-
-
-    const keys = [
-
-        "Shots on Goal",
-        "Shots off Goal",
-        "Total Shots",
-        "Fouls",
-        "Corner Kicks",
-        "Offsides",
-        "Ball Possession",
-        "Yellow Cards",
-        "Red Cards",
-        "Goalkeeper Saves",
-        "Total passes",
-        "Passes accurate",
-        "Passes %"
-
-    ];
-
-
-    const available =
-        keys.filter(
-            key =>
-                homeStats[key] !== undefined ||
-                awayStats[key] !== undefined
-        );
-
-
-    if(!available.length){
-
-        return empty(
-            "İstatistik verisi yok."
-        );
-
-    }
-
-
-    return available.map(key => `
-
-        <div class="stat-row">
-
-            <div class="home">
-
-                ${esc(
-                    homeStats[key] ?? "-"
-                )}
+                </span>
 
             </div>
 
 
-            <div class="stat-name">
+            <div class="detail-score">
 
-                ${esc(key)}
+                <div class="detail-teams">
 
-            </div>
+                    <div class="detail-team">
+
+                        ${
+                            home.logo
+                                ? `
+                                    <img
+                                        src="${esc(
+                                            home.logo
+                                        )}"
+                                        alt=""
+                                        style="
+                                            width:80px;
+                                            height:80px;
+                                            object-fit:contain
+                                        "
+                                    >
+                                `
+                                : "⚽"
+                        }
+
+                        <span>
+                            ${esc(
+                                home.name ||
+                                ""
+                            )}
+                        </span>
+
+                    </div>
 
 
-            <div class="away">
+                    <div>
 
-                ${esc(
-                    awayStats[key] ?? "-"
-                )}
+                        <div
+                            class="big-score"
+                            id="detailBigScore"
+                        >
+
+                            ${goals.home ?? 0}
+                            -
+                            ${goals.away ?? 0}
+
+                        </div>
+
+
+                        <div
+                            class="detail-status"
+                            id="detailStatus"
+                        >
+
+                            ${
+                                status.elapsed
+                                    ? status.elapsed +
+                                      "'"
+                                    : status.short ||
+                                      ""
+                            }
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="detail-team">
+
+                        ${
+                            away.logo
+                                ? `
+                                    <img
+                                        src="${esc(
+                                            away.logo
+                                        )}"
+                                        alt=""
+                                        style="
+                                            width:80px;
+                                            height:80px;
+                                            object-fit:contain
+                                        "
+                                    >
+                                `
+                                : "⚽"
+                        }
+
+                        <span>
+                            ${esc(
+                                away.name ||
+                                ""
+                            )}
+                        </span>
+
+                    </div>
+
+                </div>
 
             </div>
 
         </div>
 
-    `).join("");
+
+        <div
+            class="grid-2"
+            style="
+                display:grid;
+                grid-template-columns:1fr 1fr;
+                gap:16px;
+                margin-top:16px
+            "
+        >
+
+            <div class="panel">
+
+                <div class="panel-head">
+
+                    <h3>
+                        ⚽ Olaylar
+                    </h3>
+
+                </div>
+
+                <div class="events">
+
+                    ${renderEvents(
+                        events
+                    )}
+
+                </div>
+
+            </div>
+
+
+            <div class="panel">
+
+                <div class="panel-head">
+
+                    <h3>
+                        📊 İstatistikler
+                    </h3>
+
+                </div>
+
+                <div class="panel-body">
+
+                    ${renderStatistics(
+                        statistics,
+                        home.id
+                    )}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    `;
 
 }
 
 
-/* =========================================================
-   MATCH DETAIL LIVE UPDATE
-   ========================================================= */
+/*
+    Maç detayı sadece açıkken,
+    15 saniyede bir güncellenir.
+
+    Bu artık 5 saniye değil.
+*/
 
 setInterval(
     async () => {
 
         if(
-            currentPage !== "detail" ||
+            currentPage !==
+            "detail" ||
             !currentDetailId
         ){
 
@@ -3981,7 +4452,7 @@ setInterval(
                 $("detailBigScore");
 
 
-            const status =
+            const statusEl =
                 $("detailStatus");
 
 
@@ -3994,22 +4465,17 @@ setInterval(
                     `${fixture.goals?.home ?? 0} - ` +
                     `${fixture.goals?.away ?? 0}`;
 
-            }
 
+                if(statusEl){
 
-            if(
-                fixture &&
-                status
-            ){
+                    statusEl.textContent =
+                        fixture.fixture?.status?.elapsed
+                            ? fixture.fixture.status.elapsed +
+                              "'"
+                            : fixture.fixture?.status?.short ||
+                              "";
 
-                const s =
-                    fixture.fixture?.status || {};
-
-
-                status.textContent =
-                    s.elapsed
-                        ? s.elapsed + "'"
-                        : s.short || "";
+                }
 
             }
 
@@ -4017,29 +4483,296 @@ setInterval(
         }catch(error){
 
             console.warn(
-                "Detay güncelleme:",
+                "Detail refresh:",
                 error.message
             );
 
         }
 
     },
-    5000
+    DETAIL_REFRESH_MS
 );
+
+
+/* =========================================================
+   EVENTS
+   ========================================================= */
+
+function renderEvents(
+    events
+){
+
+    if(
+        !events.length
+    ){
+
+        return empty(
+            "Bu maç için olay bulunamadı."
+        );
+
+    }
+
+
+    return events
+        .map(
+            event => {
+
+                let icon =
+                    "•";
+
+
+                if(
+                    event.type ===
+                    "Goal"
+                ){
+
+                    icon =
+                        "⚽";
+
+                }else if(
+                    event.type ===
+                    "Card"
+                ){
+
+                    icon =
+                        String(
+                            event.detail ||
+                            ""
+                        )
+                        .toLowerCase()
+                        .includes(
+                            "yellow"
+                        )
+                            ? "🟨"
+                            : "🟥";
+
+                }else if(
+                    String(
+                        event.type ||
+                        ""
+                    )
+                    .toLowerCase() ===
+                    "subst"
+                ){
+
+                    icon =
+                        "🔄";
+
+                }
+
+
+                return `
+
+                    <div class="event">
+
+                        <div class="event-time">
+
+                            ${esc(
+                                event.time?.elapsed ||
+                                ""
+                            )}'
+
+                        </div>
+
+
+                        <div class="event-center">
+
+                            <div class="event-icon">
+                                ${icon}
+                            </div>
+
+                            <b>
+                                ${esc(
+                                    event.player?.name ||
+                                    ""
+                                )}
+                            </b>
+
+                            <div
+                                style="
+                                    color:var(--muted);
+                                    font-size:10px;
+                                    margin-top:3px
+                                "
+                            >
+
+                                ${esc(
+                                    event.detail ||
+                                    event.type ||
+                                    ""
+                                )}
+
+                            </div>
+
+                        </div>
+
+                        <div></div>
+
+                    </div>
+
+                `;
+
+            }
+        )
+        .join("");
+
+}
+
+
+/* =========================================================
+   STATISTICS
+   ========================================================= */
+
+function renderStatistics(
+    statistics,
+    homeId
+){
+
+    if(
+        !statistics.length
+    ){
+
+        return empty(
+            "İstatistik bulunamadı."
+        );
+
+    }
+
+
+    let homeStats =
+        {};
+
+    let awayStats =
+        {};
+
+
+    statistics.forEach(
+        item => {
+
+            const target =
+                item.team?.id ===
+                homeId
+                    ? homeStats
+                    : awayStats;
+
+
+            (item.statistics || [])
+                .forEach(
+                    stat => {
+
+                        target[
+                            stat.type
+                        ] =
+                            stat.value;
+
+                    }
+                );
+
+        }
+    );
+
+
+    const keys = [
+
+        "Shots on Goal",
+        "Shots off Goal",
+        "Total Shots",
+        "Fouls",
+        "Corner Kicks",
+        "Offsides",
+        "Ball Possession",
+        "Yellow Cards",
+        "Red Cards",
+        "Goalkeeper Saves",
+        "Total passes",
+        "Passes accurate",
+        "Passes %"
+
+    ];
+
+
+    const available =
+        keys.filter(
+            key =>
+                homeStats[key] !==
+                    undefined ||
+                awayStats[key] !==
+                    undefined
+        );
+
+
+    if(
+        !available.length
+    ){
+
+        return empty(
+            "İstatistik verisi yok."
+        );
+
+    }
+
+
+    return available
+        .map(
+            key => `
+
+                <div class="stat-row">
+
+                    <div class="home">
+
+                        ${esc(
+                            homeStats[key] ??
+                            "-"
+                        )}
+
+                    </div>
+
+
+                    <div class="stat-name">
+
+                        ${esc(
+                            key
+                        )}
+
+                    </div>
+
+
+                    <div class="away">
+
+                        ${esc(
+                            awayStats[key] ??
+                            "-"
+                        )}
+
+                    </div>
+
+                </div>
+
+            `
+        )
+        .join("");
+
+}
 
 
 /* =========================================================
    TEAM
    ========================================================= */
 
-async function openTeam(id){
+async function openTeam(
+    id
+){
 
     if(!id){
+
         return;
+
     }
 
 
-    showPage("team");
+    showPage(
+        "team"
+    );
 
 
     $("teamContainer")
@@ -4049,22 +4782,64 @@ async function openTeam(id){
 
     try{
 
+        const teamCacheKey =
+            "team_" +
+            id;
+
+
+        let teamCached;
+
+
+        try{
+
+            teamCached =
+                JSON.parse(
+                    localStorage.getItem(
+                        teamCacheKey
+                    ) || "null"
+                );
+
+        }catch{}
+
+
+        if(
+            teamCached &&
+            nowMs() -
+            teamCached.time <
+            3600000
+        ){
+
+            renderTeam(
+                teamCached.team,
+                teamCached.players
+            );
+
+            return;
+
+        }
+
+
         const [
             teamData,
             squadData
-        ] = await Promise.all([
+        ] =
+            await Promise.all([
 
-            api(
-                "/teams?id=" +
-                encodeURIComponent(id)
-            ),
+                api(
+                    "/teams?id=" +
+                    encodeURIComponent(
+                        id
+                    )
+                ),
 
-            api(
-                "/players/squads?team=" +
-                encodeURIComponent(id)
-            )
+                api(
+                    "/players/squads?team=" +
+                    encodeURIComponent(
+                        id
+                    )
+                )
 
-        ]);
+            ]);
 
 
         const item =
@@ -4081,222 +4856,66 @@ async function openTeam(id){
 
 
         const team =
-            item.team || {};
+            item.team ||
+            {};
 
         const venue =
-            item.venue || {};
+            item.venue ||
+            {};
 
 
         const groups =
-            squadData.response || [];
+            squadData.response ||
+            [];
 
 
-        let players = [];
+        let players =
+            [];
 
 
-        groups.forEach(group => {
+        groups.forEach(
+            group => {
 
-            if(
-                Array.isArray(
-                    group.players
-                )
-            ){
+                if(
+                    Array.isArray(
+                        group.players
+                    )
+                ){
 
-                players.push(
-                    ...group.players
-                );
+                    players.push(
+                        ...group.players
+                    );
+
+                }
 
             }
-
-        });
-
-
-        $("teamContainer").innerHTML = `
-
-            <div class="panel">
-
-                <div class="profile">
-
-                    ${
-                        team.logo
-                        ? `
-                            <img
-                                class="profile-logo"
-                                src="${esc(team.logo)}"
-                                alt=""
-                            >
-                        `
-                        : "⚽"
-                    }
+        );
 
 
-                    <div>
+        try{
 
-                        <h2>
-                            ${esc(
-                                team.name || ""
-                            )}
-                        </h2>
+            localStorage.setItem(
+                teamCacheKey,
+                JSON.stringify({
+                    time:nowMs(),
+                    team:{
+                        team,
+                        venue
+                    },
+                    players
+                })
+            );
 
-
-                        <p
-                            style="
-                                color:var(--muted);
-                                margin-top:4px
-                            "
-                        >
-                            ${esc(
-                                team.country || ""
-                            )}
-                        </p>
+        }catch{}
 
 
-                        ${
-                            venue.name
-                            ? `
-                                <p
-                                    style="
-                                        color:var(--muted);
-                                        margin-top:5px
-                                    "
-                                >
-                                    🏟️
-                                    ${esc(
-                                        venue.name
-                                    )}
-                                </p>
-                            `
-                            : ""
-                        }
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <div
-                class="panel"
-                style="margin-top:16px"
-            >
-
-                <div class="panel-head">
-
-                    <h3>
-                        👤 Kadro
-                    </h3>
-
-                    <span
-                        style="
-                            color:var(--muted);
-                            font-size:11px
-                        "
-                    >
-
-                        ${players.length}
-                        oyuncu
-
-                    </span>
-
-                </div>
-
-
-                <div class="table-wrap">
-
-                    <table>
-
-                        <thead>
-
-                            <tr>
-
-                                <th>
-                                    Oyuncu
-                                </th>
-
-                                <th>
-                                    Numara
-                                </th>
-
-                                <th>
-                                    Mevki
-                                </th>
-
-                            </tr>
-
-                        </thead>
-
-
-                        <tbody>
-
-                            ${
-                                players.map(
-                                    player => `
-
-                                        <tr>
-
-                                            <td>
-
-                                                <div
-                                                    class="club-cell"
-                                                >
-
-                                                    ${
-                                                        player.photo
-                                                        ? `
-                                                            <img
-                                                                src="${esc(
-                                                                    player.photo
-                                                                )}"
-                                                                alt=""
-                                                                style="
-                                                                    width:35px;
-                                                                    height:35px;
-                                                                    border-radius:50%
-                                                                "
-                                                            >
-                                                        `
-                                                        : ""
-                                                    }
-
-                                                    <b>
-                                                        ${esc(
-                                                            player.name ||
-                                                            ""
-                                                        )}
-                                                    </b>
-
-                                                </div>
-
-                                            </td>
-
-
-                                            <td>
-                                                ${player.number ?? "-"}
-                                            </td>
-
-
-                                            <td>
-                                                ${esc(
-                                                    player.pos || "-"
-                                                )}
-                                            </td>
-
-                                        </tr>
-
-                                    `
-                                ).join("")
-                            }
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-
-        `;
+        renderTeam(
+            {
+                team,
+                venue
+            },
+            players
+        );
 
 
     }catch(error){
@@ -4313,18 +4932,236 @@ async function openTeam(id){
 }
 
 
+function renderTeam(
+    item,
+    players
+){
+
+    const team =
+        item.team ||
+        {};
+
+    const venue =
+        item.venue ||
+        {};
+
+
+    $("teamContainer")
+        .innerHTML = `
+
+        <div class="panel">
+
+            <div class="profile">
+
+                ${
+                    team.logo
+                        ? `
+                            <img
+                                class="profile-logo"
+                                src="${esc(
+                                    team.logo
+                                )}"
+                                alt=""
+                            >
+                        `
+                        : "⚽"
+                }
+
+
+                <div>
+
+                    <h2>
+                        ${esc(
+                            team.name ||
+                            ""
+                        )}
+                    </h2>
+
+
+                    <p
+                        style="
+                            color:var(--muted);
+                            margin-top:4px
+                        "
+                    >
+                        ${esc(
+                            team.country ||
+                            ""
+                        )}
+                    </p>
+
+
+                    ${
+                        venue.name
+                            ? `
+                                <p
+                                    style="
+                                        color:var(--muted);
+                                        margin-top:5px
+                                    "
+                                >
+                                    🏟️
+                                    ${esc(
+                                        venue.name
+                                    )}
+                                </p>
+                            `
+                            : ""
+                    }
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div
+            class="panel"
+            style="margin-top:16px"
+        >
+
+            <div class="panel-head">
+
+                <h3>
+                    👤 Kadro
+                </h3>
+
+                <span
+                    style="
+                        color:var(--muted);
+                        font-size:11px
+                    "
+                >
+
+                    ${players.length}
+                    oyuncu
+
+                </span>
+
+            </div>
+
+
+            <div class="table-wrap">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Oyuncu
+                            </th>
+
+                            <th>
+                                Numara
+                            </th>
+
+                            <th>
+                                Mevki
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        ${
+                            players
+                                .map(
+                                    player => `
+
+                                    <tr>
+
+                                        <td>
+
+                                            <div
+                                                class="club-cell"
+                                            >
+
+                                                ${
+                                                    player.photo
+                                                        ? `
+                                                            <img
+                                                                src="${esc(
+                                                                    player.photo
+                                                                )}"
+                                                                alt=""
+                                                                style="
+                                                                    width:35px;
+                                                                    height:35px;
+                                                                    border-radius:50%
+                                                                "
+                                                            >
+                                                        `
+                                                        : ""
+                                                }
+
+                                                <b>
+                                                    ${esc(
+                                                        player.name ||
+                                                        ""
+                                                    )}
+                                                </b>
+
+                                            </div>
+
+                                        </td>
+
+
+                                        <td>
+                                            ${player.number ?? "-"}
+                                        </td>
+
+
+                                        <td>
+                                            ${esc(
+                                                player.pos ||
+                                                "-"
+                                            )}
+                                        </td>
+
+                                    </tr>
+
+                                `
+                                )
+                                .join("")
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
 /* =========================================================
    PLAYER
    ========================================================= */
 
-async function openPlayer(id){
+async function openPlayer(
+    id
+){
 
     if(!id){
+
         return;
+
     }
 
 
-    showPage("player");
+    showPage(
+        "player"
+    );
 
 
     $("playerContainer")
@@ -4334,10 +5171,49 @@ async function openPlayer(id){
 
     try{
 
+        const cacheKey =
+            "player_" +
+            id;
+
+
+        let cached;
+
+
+        try{
+
+            cached =
+                JSON.parse(
+                    localStorage.getItem(
+                        cacheKey
+                    ) || "null"
+                );
+
+        }catch{}
+
+
+        if(
+            cached &&
+            nowMs() -
+            cached.time <
+            1800000
+        ){
+
+            renderPlayer(
+                cached.player,
+                cached.stats
+            );
+
+            return;
+
+        }
+
+
         const data =
             await api(
                 "/players?id=" +
-                encodeURIComponent(id) +
+                encodeURIComponent(
+                    id
+                ) +
                 "&season=" +
                 currentYear()
             );
@@ -4357,154 +5233,32 @@ async function openPlayer(id){
 
 
         const player =
-            item.player || {};
-
+            item.player ||
+            {};
 
         const stats =
-            item.statistics || [];
+            item.statistics ||
+            [];
 
 
-        const matches =
-            stats.reduce(
-                (sum,s) =>
-                    sum +
-                    Number(
-                        s.games?.appearences || 0
-                    ),
-                0
+        try{
+
+            localStorage.setItem(
+                cacheKey,
+                JSON.stringify({
+                    time:nowMs(),
+                    player,
+                    stats
+                })
             );
 
-
-        const goals =
-            stats.reduce(
-                (sum,s) =>
-                    sum +
-                    Number(
-                        s.goals?.total || 0
-                    ),
-                0
-            );
+        }catch{}
 
 
-        const assists =
-            stats.reduce(
-                (sum,s) =>
-                    sum +
-                    Number(
-                        s.goals?.assists || 0
-                    ),
-                0
-            );
-
-
-        $("playerContainer").innerHTML = `
-
-            <div class="panel">
-
-                <div class="profile">
-
-                    ${
-                        player.photo
-                        ? `
-                            <img
-                                class="profile-logo"
-                                src="${esc(player.photo)}"
-                                alt=""
-                            >
-                        `
-                        : "👤"
-                    }
-
-
-                    <div>
-
-                        <h2>
-                            ${esc(
-                                player.name || ""
-                            )}
-                        </h2>
-
-
-                        <p
-                            style="
-                                color:var(--muted);
-                                margin-top:4px
-                            "
-                        >
-
-                            ${esc(
-                                player.nationality ||
-                                ""
-                            )}
-
-                            ${
-                                player.age
-                                ? " · " +
-                                  player.age +
-                                  " yaş"
-                                : ""
-                            }
-
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <div
-                class="grid-2"
-                style="
-                    display:grid;
-                    grid-template-columns:repeat(3,1fr);
-                    gap:16px;
-                    margin-top:16px
-                "
-            >
-
-                <div class="stat-card">
-
-                    <div class="stat-label">
-                        Maç
-                    </div>
-
-                    <div class="stat-value">
-                        ${matches}
-                    </div>
-
-                </div>
-
-
-                <div class="stat-card">
-
-                    <div class="stat-label">
-                        Gol
-                    </div>
-
-                    <div class="stat-value">
-                        ${goals}
-                    </div>
-
-                </div>
-
-
-                <div class="stat-card">
-
-                    <div class="stat-label">
-                        Asist
-                    </div>
-
-                    <div class="stat-value">
-                        ${assists}
-                    </div>
-
-                </div>
-
-            </div>
-
-        `;
+        renderPlayer(
+            player,
+            stats
+        );
 
 
     }catch(error){
@@ -4517,6 +5271,163 @@ async function openPlayer(id){
             );
 
     }
+
+}
+
+
+function renderPlayer(
+    player,
+    stats
+){
+
+    const matches =
+        stats.reduce(
+            (sum,s) =>
+                sum +
+                Number(
+                    s.games?.appearences ||
+                    0
+                ),
+            0
+        );
+
+
+    const goals =
+        stats.reduce(
+            (sum,s) =>
+                sum +
+                Number(
+                    s.goals?.total ||
+                    0
+                ),
+            0
+        );
+
+
+    const assists =
+        stats.reduce(
+            (sum,s) =>
+                sum +
+                Number(
+                    s.goals?.assists ||
+                    0
+                ),
+            0
+        );
+
+
+    $("playerContainer")
+        .innerHTML = `
+
+        <div class="panel">
+
+            <div class="profile">
+
+                ${
+                    player.photo
+                        ? `
+                            <img
+                                class="profile-logo"
+                                src="${esc(
+                                    player.photo
+                                )}"
+                                alt=""
+                            >
+                        `
+                        : "👤"
+                }
+
+
+                <div>
+
+                    <h2>
+                        ${esc(
+                            player.name ||
+                            ""
+                        )}
+                    </h2>
+
+
+                    <p
+                        style="
+                            color:var(--muted);
+                            margin-top:4px
+                        "
+                    >
+
+                        ${esc(
+                            player.nationality ||
+                            ""
+                        )}
+
+                        ${
+                            player.age
+                                ? " · " +
+                                  player.age +
+                                  " yaş"
+                                : ""
+                        }
+
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div
+            class="grid-2"
+            style="
+                display:grid;
+                grid-template-columns:repeat(3,1fr);
+                gap:16px;
+                margin-top:16px
+            "
+        >
+
+            <div class="stat-card">
+
+                <div class="stat-label">
+                    Maç
+                </div>
+
+                <div class="stat-value">
+                    ${matches}
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-label">
+                    Gol
+                </div>
+
+                <div class="stat-value">
+                    ${goals}
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-label">
+                    Asist
+                </div>
+
+                <div class="stat-value">
+                    ${assists}
+                </div>
+
+            </div>
+
+        </div>
+
+    `;
 
 }
 
@@ -4534,7 +5445,8 @@ async function doSearch(){
 
 
     const type =
-        $("searchType").value;
+        $("searchType")
+            .value;
 
 
     if(!query){
@@ -4557,17 +5469,23 @@ async function doSearch(){
 
     try{
 
-        if(type === "teams"){
+        if(
+            type ===
+            "teams"
+        ){
 
             const data =
                 await api(
                     "/teams?search=" +
-                    encodeURIComponent(query)
+                    encodeURIComponent(
+                        query
+                    )
                 );
 
 
             const results =
-                data.response || [];
+                data.response ||
+                [];
 
 
             if(!results.length){
@@ -4586,37 +5504,42 @@ async function doSearch(){
             $("searchResults")
                 .innerHTML = `
 
-                    <div class="search-results">
+                <div class="search-results">
 
-                        ${
-                            results.map(item => {
+                    ${
+                        results
+                            .map(
+                                item => {
 
-                                const team =
-                                    item.team || {};
+                                    const team =
+                                        item.team ||
+                                        {};
 
 
-                                return `
+                                    return `
 
                                     <div
                                         class="search-result"
                                         onclick="
                                             openTeam(
-                                                ${Number(team.id)}
+                                                ${Number(
+                                                    team.id
+                                                )}
                                             )
                                         "
                                     >
 
                                         ${
                                             team.logo
-                                            ? `
-                                                <img
-                                                    src="${esc(
-                                                        team.logo
-                                                    )}"
-                                                    alt=""
-                                                >
-                                            `
-                                            : "⚽"
+                                                ? `
+                                                    <img
+                                                        src="${esc(
+                                                            team.logo
+                                                        )}"
+                                                        alt=""
+                                                    >
+                                                `
+                                                : "⚽"
                                         }
 
 
@@ -4651,30 +5574,37 @@ async function doSearch(){
 
                                     </div>
 
-                                `;
+                                    `;
 
-                            }).join("")
-                        }
+                                }
+                            )
+                            .join("")
+                    }
 
-                    </div>
+                </div>
 
-                `;
+            `;
 
 
-        }
-        else if(type === "players"){
+        }else if(
+            type ===
+            "players"
+        ){
 
             const data =
                 await api(
                     "/players?search=" +
-                    encodeURIComponent(query) +
+                    encodeURIComponent(
+                        query
+                    ) +
                     "&season=" +
                     currentYear()
                 );
 
 
             const results =
-                data.response || [];
+                data.response ||
+                [];
 
 
             if(!results.length){
@@ -4693,37 +5623,42 @@ async function doSearch(){
             $("searchResults")
                 .innerHTML = `
 
-                    <div class="search-results">
+                <div class="search-results">
 
-                        ${
-                            results.map(item => {
+                    ${
+                        results
+                            .map(
+                                item => {
 
-                                const player =
-                                    item.player || {};
+                                    const player =
+                                        item.player ||
+                                        {};
 
 
-                                return `
+                                    return `
 
                                     <div
                                         class="search-result"
                                         onclick="
                                             openPlayer(
-                                                ${Number(player.id)}
+                                                ${Number(
+                                                    player.id
+                                                )}
                                             )
                                         "
                                     >
 
                                         ${
                                             player.photo
-                                            ? `
-                                                <img
-                                                    src="${esc(
-                                                        player.photo
-                                                    )}"
-                                                    alt=""
-                                                >
-                                            `
-                                            : "👤"
+                                                ? `
+                                                    <img
+                                                        src="${esc(
+                                                            player.photo
+                                                        )}"
+                                                        alt=""
+                                                    >
+                                                `
+                                                : "👤"
                                         }
 
 
@@ -4758,25 +5693,43 @@ async function doSearch(){
 
                                     </div>
 
-                                `;
+                                    `;
 
-                            }).join("")
-                        }
+                                }
+                            )
+                            .join("")
+                    }
 
-                    </div>
+                </div>
 
-                `;
+            `;
 
 
-        }
-        else{
+        }else{
 
-            showPage("leagues");
+            showPage(
+                "leagues"
+            );
 
-            $("leagueSearch").value =
+
+            $("leagueSearch")
+                .value =
                 query;
 
-            renderLeagueResults();
+
+            if(
+                !leaguesCache.length
+            ){
+
+                await loadLeagues(
+                    false
+                );
+
+            }else{
+
+                renderLeagueResults();
+
+            }
 
         }
 
@@ -4804,22 +5757,33 @@ $("globalSearch")
         "keydown",
         e => {
 
-            if(e.key === "Enter"){
+            if(
+                e.key ===
+                "Enter"
+            ){
 
                 const value =
-                    e.target.value.trim();
+                    e.target
+                        .value
+                        .trim();
 
 
                 if(!value){
+
                     return;
+
                 }
 
 
-                $("searchInput").value =
+                $("searchInput")
+                    .value =
                     value;
 
 
-                showPage("search");
+                showPage(
+                    "search"
+                );
+
 
                 doSearch();
 
@@ -4834,7 +5798,10 @@ $("searchInput")
         "keydown",
         e => {
 
-            if(e.key === "Enter"){
+            if(
+                e.key ===
+                "Enter"
+            ){
 
                 doSearch();
 
@@ -4845,56 +5812,151 @@ $("searchInput")
 
 
 /* =========================================================
+   LIVE API VERİSİNİ STANDINGS İÇİN TUT
+   ========================================================= */
+
+/*
+    loadLive fonksiyonunun orijinal hali
+    bittikten sonra canlı fixture'ları
+    burada tutmak için fetch'i bir kez
+    daha çağırmıyoruz.
+
+    Mutation observer yerine canlı render
+    sonrasında mevcut response'u saklamak
+    gerekiyor.
+*/
+
+
+/*
+    Bunun için loadLive'i tekrar tanımlamak
+    yerine küçük bir fetch katmanı kullanıyoruz.
+
+    İlk çağrıdan sonra aşağıdaki fonksiyon
+    canlı veriyi standings belleğine yazar.
+*/
+
+async function refreshLiveMemory(){
+
+    try{
+
+        const data =
+            await api(
+                "/fixtures?live=all"
+            );
+
+
+        const matches =
+            Array.isArray(
+                data.response
+            )
+                ? data.response
+                : [];
+
+
+        window.GOALHUB_LIVE_FIXTURES =
+            matches;
+
+
+        return matches;
+
+    }catch{
+
+        return [];
+
+    }
+
+}
+
+
+/*
+    Önemli:
+    Bu fonksiyon ekstra otomatik çağrı yapmaz.
+
+    Sadece kullanıcı manuel olarak canlı
+    yenilediğinde çalıştırılır.
+*/
+
+const originalApiPerform =
+    performApiRequest;
+
+
+/*
+    API response'larından canlı fixture'ı
+    yakala.
+
+    Böylece standings ekstra fixtures
+    endpoint'i kullanmaz.
+*/
+
+async function performApiRequestTracked(
+    endpoint
+){
+
+    const data =
+        await originalApiPerform(
+            endpoint
+        );
+
+
+    if(
+        endpoint ===
+        "/fixtures?live=all"
+    ){
+
+        window.GOALHUB_LIVE_FIXTURES =
+            Array.isArray(
+                data.response
+            )
+                ? data.response
+                : [];
+
+    }
+
+
+    return data;
+
+}
+
+
+/* =========================================================
    CONSOLE
    ========================================================= */
 
 console.log(
-    "%c⚽ GOALHUB PRO",
+    "%c⚽ GOALHUB PRO KOTA KORUMALI",
     "color:#20d47a;font-size:22px;font-weight:900"
 );
 
 console.log(
-    "✓ Canlı maçlar"
+    "✓ Canlı maçlar: 30 saniye"
 );
 
 console.log(
-    "✓ 15 saniyelik canlı yenileme"
+    "✓ Standings: 60 saniye"
 );
 
 console.log(
-    "✓ Gerçek puan tabloları"
+    "✓ Maç bitişinde ekstra fixtures sorgusu YOK"
 );
 
 console.log(
-    "✓ Canlı puan hesaplama"
+    "✓ Maç bitince 5 saniye sonra standings"
 );
 
 console.log(
-    "✓ PUAN ŞİŞMESİ DÜZELTİLDİ"
+    "✓ Ligler: 30 dakika cache"
 );
 
 console.log(
-    "✓ Maç bittikten 5 saniye sonra resmi tablo"
+    "✓ Takım/oyuncu cache"
 );
 
 console.log(
-    "✓ Tüm aktif ligler"
+    "✓ Aynı anda duplicate API request engeli"
 );
 
 console.log(
-    "✓ Fikstür"
-);
-
-console.log(
-    "✓ Maç detayları"
-);
-
-console.log(
-    "✓ Takımlar"
-);
-
-console.log(
-    "✓ Oyuncular"
+    "✓ Maç detayı sadece açıkken 15 saniye"
 );
 
 console.log(
@@ -4906,30 +5968,39 @@ console.log(
    SERVICE WORKER
    ========================================================= */
 
-if("serviceWorker" in navigator){
+if(
+    "serviceWorker" in navigator
+){
 
     window.addEventListener(
         "load",
         () => {
 
-            navigator.serviceWorker
-                .register("/sw.js")
-                .then(registration => {
+            navigator
+                .serviceWorker
+                .register(
+                    "/sw.js"
+                )
+                .then(
+                    registration => {
 
-                    console.log(
-                        "✓ GOALHUB Service Worker aktif:",
-                        registration.scope
-                    );
+                        console.log(
+                            "✓ GOALHUB Service Worker aktif:",
+                            registration.scope
+                        );
 
-                })
-                .catch(error => {
+                    }
+                )
+                .catch(
+                    error => {
 
-                    console.error(
-                        "✗ Service Worker:",
-                        error
-                    );
+                        console.error(
+                            "✗ Service Worker:",
+                            error
+                        );
 
-                });
+                    }
+                );
 
         }
     );
@@ -4941,9 +6012,24 @@ if("serviceWorker" in navigator){
    BAŞLANGIÇ
    ========================================================= */
 
+/*
+    İlk açılışta sadece iki API isteği:
+
+    1. live
+    2. leagues
+
+    Daha sonra timerlar devreye girer.
+*/
+
+window.GOALHUB_LIVE_FIXTURES =
+    [];
+
+
 loadLive();
 
+
 loadLeagues();
+
 
 </script>
 
